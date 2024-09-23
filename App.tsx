@@ -3,6 +3,7 @@ import { SafeAreaView, StatusBar, useColorScheme, View, Text } from 'react-nativ
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Header from './app/Header';
+import Icon from 'react-native-vector-icons/Ionicons';
 // HomeScreen과 SettingsScreen 컴포넌트를 임시로 만듭니다.
 function HomeScreen() {
   return (
@@ -12,10 +13,31 @@ function HomeScreen() {
   );
 }
 
-function SettingsScreen() {
+function RankingScreen() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Settings Screen</Text>
+      <Text>Ranking Screen</Text>
+    </View>
+  );
+}
+function AlarmScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Alarm Screen</Text>
+    </View>
+  );
+}
+function LikeScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Like Screen</Text>
+    </View>
+  );
+}
+function SettingScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Setting Screen</Text>
     </View>
   );
 }
@@ -44,9 +66,63 @@ function App(): React.JSX.Element {
         />
         <Header toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
         {/* Tab.Navigator는 독립적으로 사용해야 하므로 다른 컨테이너로 감싸지 않습니다. */}
-        <Tab.Navigator>
-          <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Navigator
+        >
+          <Tab.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              tabBarLabel: () => { return null },
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="person-circle-outline" color={color} size={30} />
+              ),
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen
+            name="Ranking"
+            component={RankingScreen}
+            options={{
+              tabBarLabel: () => { return null },
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="star-outline" color={color} size={size} />
+              ),
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen
+            name="Alarm"
+            component={AlarmScreen}
+            options={{
+              tabBarLabel: () => { return null },
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="notifications-outline" color={color} size={size} />
+              ),
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen
+            name="Like"
+            component={LikeScreen}
+            options={{
+              tabBarLabel: () => { return null },
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="heart-outline" color={color} size={size} />
+              ),
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen
+            name="Setting"
+            component={SettingScreen}
+            options={{
+              tabBarLabel: () => { return null },
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="settings-outline" color={color} size={size} />
+              ),
+              headerShown: false,
+            }}
+          />
         </Tab.Navigator>
       </SafeAreaView>
     </NavigationContainer>
