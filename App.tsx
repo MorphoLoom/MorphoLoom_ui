@@ -2,6 +2,7 @@ import React, {useEffect} from 'react';
 import {SafeAreaView, StatusBar} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Header from './app/Header';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SplashScreen from 'react-native-splash-screen';
@@ -11,11 +12,28 @@ import {
   RankingScreen,
   AlarmScreen,
   LikeScreen,
+  LikeDetailScreen,
   SettingScreen,
 } from './screens';
 import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function LikeStack(): React.JSX.Element {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="LikeMain" component={LikeScreen} />
+      <Stack.Screen
+        name="LikeDetail"
+        component={LikeDetailScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 function MainTabs(): React.JSX.Element {
   const {isDarkMode, colors} = useTheme();
@@ -76,7 +94,7 @@ function MainTabs(): React.JSX.Element {
         />
         <Tab.Screen
           name="Like"
-          component={LikeScreen}
+          component={LikeStack}
           options={{
             tabBarLabel: () => null,
             tabBarIcon: ({color, size}) => (

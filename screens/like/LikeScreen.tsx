@@ -10,88 +10,111 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 
+const baseImages = [
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+  'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
+  'https://images.unsplash.com/photo-1519125323398-675f0ddb6308',
+  'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e',
+  'https://images.unsplash.com/photo-1519985176271-adb1088fa94c',
+  'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368',
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d',
+  'https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6',
+  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2',
+];
+
 const mockData = [
   {
     id: '1',
-    title: 'Like Title',
-    description: 'Description',
-    time: '9:41 AM',
-    image: 'https://via.placeholder.com/48',
+    title: '여름 바다',
+    description: '휴가에서 찍은 시원한 바다 사진',
+    time: '2025-12-01',
+    image: baseImages[0],
   },
   {
     id: '2',
-    title: 'Like Title',
-    description: 'Description',
-    time: '9:41 AM',
-    image: 'https://via.placeholder.com/48',
+    title: '겨울 산',
+    description: '눈 내린 산 정상에서 한 컷',
+    time: '2025-11-28',
+    image: baseImages[1],
   },
   {
     id: '3',
-    title: 'Like Title',
-    description: 'Description',
-    time: '9:41 AM',
-    image: 'https://via.placeholder.com/48',
+    title: '도시 야경',
+    description: '밤에 본 도심의 불빛',
+    time: '2025-11-25',
+    image: baseImages[2],
   },
   {
     id: '4',
-    title: 'Like Title',
-    description: 'Description',
-    time: '9:41 AM',
-    image: 'https://via.placeholder.com/48',
+    title: '가을 단풍',
+    description: '단풍잎이 아름다운 공원',
+    time: '2025-11-20',
+    image: baseImages[3],
+  },
+  {
+    id: '5',
+    title: '봄 꽃',
+    description: '벚꽃이 만개한 거리',
+    time: '2025-11-15',
+    image: baseImages[4],
+  },
+  {
+    id: '6',
+    title: '강아지 산책',
+    description: '강아지와 함께한 산책길',
+    time: '2025-11-10',
+    image: baseImages[5],
+  },
+  {
+    id: '7',
+    title: '커피 한 잔',
+    description: '카페에서 마신 따뜻한 커피',
+    time: '2025-11-05',
+    image: baseImages[6],
+  },
+  {
+    id: '8',
+    title: '책 읽는 시간',
+    description: '조용한 오후의 독서',
+    time: '2025-11-01',
+    image: baseImages[7],
+  },
+  {
+    id: '9',
+    title: '운동하는 날',
+    description: '헬스장에서 운동하는 모습',
+    time: '2025-10-28',
+    image: baseImages[8],
   },
 ];
 
-const LikeScreen: React.FC = () => {
-  const {colors} = useTheme();
-  const [isCardView, setIsCardView] = useState(true);
+interface LikeScreenProps {
+  navigation?: any;
+}
 
-  const renderItem = ({item}) =>
-    isCardView ? (
-      <View style={styles.cardGrid}>
-        <Image source={{uri: item.image}} style={styles.cardImage} />
-        <Text style={styles.cardTitle}>{item.title}</Text>
-      </View>
-    ) : (
-      <View style={styles.listItem}>
-        <Image source={{uri: item.image}} style={styles.avatar} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
-        </View>
-        <Text style={styles.time}>{item.time}</Text>
-      </View>
-    );
+const LikeScreen: React.FC<LikeScreenProps> = ({navigation}) => {
+  const {colors} = useTheme();
+
+  const renderItem = ({item}) => (
+    <TouchableOpacity
+      style={styles.gridImageWrapper}
+      activeOpacity={0.8}
+      onPress={() => navigation?.navigate('LikeDetail', {item})}>
+      <Image source={{uri: item.image}} style={styles.gridImage} />
+    </TouchableOpacity>
+  );
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-        paddingHorizontal: 12,
-      }}>
-      <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>Like</Text>
-        <TouchableOpacity
-          style={styles.toggleBtn}
-          onPress={() => setIsCardView(v => !v)}>
-          <Ionicons
-            name={isCardView ? 'list-outline' : 'grid-outline'}
-            size={26}
-            color="#888"
-          />
-        </TouchableOpacity>
-      </View>
+    <View style={{flex: 1, backgroundColor: colors.background}}>
       <FlatList
         data={mockData}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={{
-          paddingVertical: 8,
-          paddingHorizontal: isCardView ? 12 : 0,
-        }}
-        numColumns={isCardView ? 2 : 1}
-        columnWrapperStyle={isCardView ? styles.gridRow : undefined}
-        key={isCardView ? 'grid' : 'list'}
+        numColumns={3}
+        contentContainerStyle={{padding: 0, margin: 0}}
+        columnWrapperStyle={{padding: 0, margin: 0}}
+        key={'grid'}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -115,43 +138,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222',
   },
-  toggleBtn: {
-    padding: 6,
-    borderRadius: 20,
-    backgroundColor: '#F3F3F3',
-  },
-  cardGrid: {
+  // toggleBtn 제거
+  gridImageWrapper: {
     flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#F3F3F3',
-    borderRadius: 16,
-    padding: 12,
-    margin: 6,
-    minWidth: '48%',
-    maxWidth: '48%',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 6,
+    aspectRatio: 1,
+    margin: 0,
+    padding: 0,
+    borderWidth: 0,
   },
-  cardImage: {
+  gridImage: {
     width: '100%',
-    aspectRatio: 0.8,
-    borderRadius: 12,
-    marginBottom: 10,
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 0,
+    margin: 0,
+    padding: 0,
     backgroundColor: '#E0E0E0',
-  },
-  cardTitle: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#222',
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-    marginLeft: 2,
-  },
-  gridRow: {
-    justifyContent: 'space-between',
   },
   listItem: {
     flexDirection: 'row',
