@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   View,
   Text,
@@ -43,6 +44,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
     <ScrollView
       style={[styles.container, {backgroundColor: colors.background}]}
       contentContainerStyle={styles.contentContainer}>
+      {/* 상단 뒤로가기 아이콘 버튼 */}
+      <TouchableOpacity
+        style={[styles.iconBackButton, {backgroundColor: colors.primary}]}
+        onPress={onBack}
+        activeOpacity={0.7}>
+        <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+      </TouchableOpacity>
       {/* 제목 */}
       <Text style={[styles.title, {color: colors.text}]}>Register</Text>
 
@@ -138,6 +146,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
 };
 
 const styles = StyleSheet.create({
+  iconBackButton: {
+    marginBottom: 40,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    elevation: 10,
+  },
   container: {
     flex: 1,
   },
