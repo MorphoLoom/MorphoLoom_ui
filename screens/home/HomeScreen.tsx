@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,15 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Image,
+  Alert,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import {useFocusEffect} from '@react-navigation/native';
+import Video from 'react-native-video';
+import Toast from 'react-native-toast-message';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -28,6 +33,21 @@ const HomeScreen: React.FC = () => {
 
   const translateX = useRef(new Animated.Value(0)).current;
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
+  const currentStepRef = useRef(0);
+  const videoPlayer = useRef<any>(null);
+
+  // 탭에 포커스될 때 비디오 카드로 리셋
+  useFocusEffect(
+    useCallback(() => {
+      if (currentStepRef.current !== 0) {
+        // 애니메이션 없이 즉시 리셋
+        translateX.setValue(0);
+        nextCardTranslateX.setValue(width);
+        currentStepRef.current = 0;
+        setCurrentStep(0);
+      }
+    }, [translateX, nextCardTranslateX]),
+  );
 
   // 스와이프 제스처 핸들러
   const panResponder = useRef(
@@ -38,27 +58,32 @@ const HomeScreen: React.FC = () => {
         return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
       },
       onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        return (
+          Math.abs(gestureState.dx) > 10 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+        );
       },
       onPanResponderMove: (_, gestureState) => {
-        // 왼쪽 스와이프 (다음 카드로)
-        if (gestureState.dx < 0 && currentStep < 1) {
+        const step = currentStepRef.current;
+        // 왼쪽 스와이프 (다음 카드로) - Step 0에서만
+        if (gestureState.dx < 0 && step === 0) {
           translateX.setValue(gestureState.dx);
           nextCardTranslateX.setValue(width + gestureState.dx);
         }
-        // 오른쪽 스와이프 (이전 카드로)
-        else if (gestureState.dx > 0 && currentStep > 0) {
+        // 오른쪽 스와이프 (이전 카드로) - Step 1에서만
+        else if (gestureState.dx > 0 && step === 1) {
           translateX.setValue(gestureState.dx);
-          nextCardTranslateX.setValue(gestureState.dx - width);
+          nextCardTranslateX.setValue(-width + gestureState.dx);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        // 왼쪽 스와이프 - 다음 카드로
-        if (gestureState.dx < -100 && currentStep < 1) {
+        const step = currentStepRef.current;
+        // 왼쪽 스와이프 - 다음 카드로 (Step 0에서만)
+        if (gestureState.dx < -100 && step === 0) {
           swipeToNext();
         }
-        // 오른쪽 스와이프 - 이전 카드로
-        else if (gestureState.dx > 100 && currentStep > 0) {
+        // 오른쪽 스와이프 - 이전 카드로 (Step 1에서만)
+        else if (gestureState.dx > 100 && step === 1) {
           swipeToPrev();
         }
         // 원위치
@@ -69,7 +94,7 @@ const HomeScreen: React.FC = () => {
               useNativeDriver: true,
             }),
             Animated.spring(nextCardTranslateX, {
-              toValue: currentStep === 0 ? width : -width,
+              toValue: step === 0 ? width : -width,
               useNativeDriver: true,
             }),
           ]).start();
@@ -91,9 +116,10 @@ const HomeScreen: React.FC = () => {
         useNativeDriver: true,
       }),
     ]).start(() => {
+      currentStepRef.current = 1;
       setCurrentStep(1);
       translateX.setValue(0);
-      nextCardTranslateX.setValue(width);
+      nextCardTranslateX.setValue(-width);
     });
   };
 
@@ -110,6 +136,7 @@ const HomeScreen: React.FC = () => {
         useNativeDriver: true,
       }),
     ]).start(() => {
+      currentStepRef.current = 0;
       setCurrentStep(0);
       translateX.setValue(0);
       nextCardTranslateX.setValue(width);
@@ -123,6 +150,7 @@ const HomeScreen: React.FC = () => {
     });
 
     if (result.assets && result.assets[0]) {
+      console.log('Selected asset:', result.assets[0]);
       const asset: MediaAsset = {
         uri: result.assets[0].uri || '',
         type,
@@ -133,7 +161,77 @@ const HomeScreen: React.FC = () => {
       } else {
         setImageAsset(asset);
       }
+
+      // 성공 토스트 표시
+      Toast.show({
+        type: 'success',
+        text1: '업로드 완료',
+        text2: `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
+        visibilityTime: 5000,
+        topOffset: 5,
+        text1Style: {
+          fontSize: 14,
+          fontWeight: '600',
+        },
+        text2Style: {
+          fontSize: 12,
+        },
+        props: {
+          style: {
+            height: 60,
+            minHeight: 60,
+          },
+        },
+      });
     }
+  };
+
+  const handleDelete = (type: 'video' | 'image') => {
+    Alert.alert(
+      '삭제 확인',
+      `${type === 'video' ? '비디오' : '이미지'}를 삭제하시겠습니까?`,
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+        {
+          text: '확인',
+          onPress: () => {
+            if (type === 'video') {
+              setVideoAsset(null);
+            } else {
+              setImageAsset(null);
+            }
+
+            // 삭제 토스트 표시
+            Toast.show({
+              type: 'info',
+              text1: '삭제 완료',
+              text2: `${
+                type === 'video' ? '비디오' : '이미지'
+              }가 삭제되었습니다`,
+              visibilityTime: 3000,
+              topOffset: 5,
+              text1Style: {
+                fontSize: 14,
+                fontWeight: '600',
+              },
+              text2Style: {
+                fontSize: 12,
+              },
+              props: {
+                style: {
+                  height: 60,
+                  minHeight: 60,
+                },
+              },
+            });
+          },
+          style: 'destructive',
+        },
+      ],
+    );
   };
 
   const handleStart = () => {
@@ -148,6 +246,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
+      <Toast />
       <View style={styles.cardContainer} {...panResponder.panHandlers}>
         {/* 비디오 카드 */}
         <Animated.View
@@ -156,7 +255,12 @@ const HomeScreen: React.FC = () => {
             styles.absoluteCard,
             {
               backgroundColor: colors.card,
-              transform: [{translateX: currentStep === 0 ? translateX : nextCardTranslateX}],
+              transform: [
+                {
+                  translateX:
+                    currentStep === 0 ? translateX : nextCardTranslateX,
+                },
+              ],
             },
           ]}>
           <TouchableOpacity
@@ -164,25 +268,42 @@ const HomeScreen: React.FC = () => {
             style={[
               styles.uploadArea,
               {
-                borderColor: colors.border,
+                borderColor: videoAsset ? 'transparent' : colors.border,
+                borderWidth: videoAsset ? 0 : 2,
                 backgroundColor: videoAsset ? 'transparent' : colors.background,
               },
             ]}
             onPress={() => handleMediaPick('video')}>
             {videoAsset ? (
-              <View style={styles.previewContainer}>
-                <Icon name="video-camera" size={60} color={colors.primary} />
-                <Text style={[styles.selectedText, {color: colors.text}]}>
-                  Video Selected
-                </Text>
-              </View>
+              <>
+                <View style={styles.previewContainer}>
+                  <Video
+                    source={{uri: videoAsset.uri}}
+                    ref={videoPlayer}
+                    paused={false}
+                    repeat={true}
+                    muted={true}
+                    style={styles.videoThumbnail}
+                    resizeMode="contain"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDelete('video')}>
+                  <Icon name="trash" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              </>
             ) : (
               <View style={styles.emptyState}>
                 <Icon name="plus-circle" size={80} color={colors.border} />
                 <Text style={[styles.uploadTitle, {color: colors.text}]}>
                   비디오 선택
                 </Text>
-                <Text style={[styles.uploadSubtitle, {color: colors.textSecondary}]}>
+                <Text
+                  style={[
+                    styles.uploadSubtitle,
+                    {color: colors.textSecondary},
+                  ]}>
                   인물이 포함된 비디오를 선택하세요
                 </Text>
               </View>
@@ -207,32 +328,50 @@ const HomeScreen: React.FC = () => {
             styles.absoluteCard,
             {
               backgroundColor: colors.card,
-              transform: [{translateX: currentStep === 1 ? translateX : nextCardTranslateX}],
+              transform: [
+                {
+                  translateX:
+                    currentStep === 1 ? translateX : nextCardTranslateX,
+                },
+              ],
             },
           ]}>
           <TouchableOpacity
             style={[
               styles.uploadArea,
               {
-                borderColor: colors.border,
+                borderColor: imageAsset ? 'transparent' : colors.border,
+                borderWidth: imageAsset ? 0 : 2,
                 backgroundColor: imageAsset ? 'transparent' : colors.background,
               },
             ]}
             onPress={() => handleMediaPick('image')}>
             {imageAsset ? (
-              <View style={styles.previewContainer}>
-                <Icon name="image" size={60} color={colors.primary} />
-                <Text style={[styles.selectedText, {color: colors.text}]}>
-                  Image Selected
-                </Text>
-              </View>
+              <>
+                <View style={styles.previewContainer}>
+                  <Image
+                    source={{uri: imageAsset.uri}}
+                    style={styles.previewImage}
+                    resizeMode="cover"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDelete('image')}>
+                  <Icon name="trash" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              </>
             ) : (
               <View style={styles.emptyState}>
                 <Icon name="plus-circle" size={80} color={colors.border} />
                 <Text style={[styles.uploadTitle, {color: colors.text}]}>
                   인물 사진 선택
                 </Text>
-                <Text style={[styles.uploadSubtitle, {color: colors.textSecondary}]}>
+                <Text
+                  style={[
+                    styles.uploadSubtitle,
+                    {color: colors.textSecondary},
+                  ]}>
                   합성할 인물 사진을 선택하세요
                 </Text>
               </View>
@@ -260,7 +399,10 @@ const HomeScreen: React.FC = () => {
 
           {(!videoAsset || !imageAsset) && (
             <Text
-              style={[styles.warningText, {color: colors.error, marginTop: 12}]}>
+              style={[
+                styles.warningText,
+                {color: colors.error, marginTop: 12},
+              ]}>
               {!videoAsset && !imageAsset
                 ? '비디오와 이미지를 선택해주세요'
                 : !videoAsset
@@ -271,7 +413,7 @@ const HomeScreen: React.FC = () => {
 
           <View style={styles.bottomIndicator}>
             <View style={styles.stepIndicator}>
-              <View style={[styles.dot, {backgroundColor: colors.primary}]} />
+              <View style={[styles.dot, {backgroundColor: colors.border}]} />
               <View style={[styles.dot, {backgroundColor: colors.primary}]} />
             </View>
           </View>
@@ -294,15 +436,15 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     height: height * 0.6,
     borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
+    padding: 16,
+    shadowColor: '#6E4877',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.6,
+    shadowRadius: 30,
+    elevation: 15,
   },
   absoluteCard: {
     position: 'absolute',
@@ -341,8 +483,52 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   previewContainer: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  videoThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  deleteButton: {
+    position: 'absolute',
+    bottom: 12,
+    left: '50%',
+    marginLeft: -22,
+    backgroundColor: 'rgba(128, 128, 128, 0.5)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  videoPreview: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
+  },
+  videoOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -20}, {translateY: -20}],
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedText: {
     fontSize: 18,
