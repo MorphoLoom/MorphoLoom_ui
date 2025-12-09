@@ -30,11 +30,14 @@ const HomeScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [videoAsset, setVideoAsset] = useState<MediaAsset | null>(null);
   const [imageAsset, setImageAsset] = useState<MediaAsset | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [resultVideo, setResultVideo] = useState<string | null>(null);
 
   const translateX = useRef(new Animated.Value(0)).current;
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
   const currentStepRef = useRef(0);
   const videoPlayer = useRef<any>(null);
+  const progress = useRef(new Animated.Value(0)).current;
 
   // 탭에 포커스될 때 비디오 카드로 리셋
   useFocusEffect(
@@ -234,19 +237,138 @@ const HomeScreen: React.FC = () => {
     );
   };
 
+  const swipeToResult = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -width,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(nextCardTranslateX, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      currentStepRef.current = 2;
+      setCurrentStep(2);
+      translateX.setValue(0);
+      nextCardTranslateX.setValue(-width);
+    });
+  };
+
   const handleStart = () => {
     if (!videoAsset || !imageAsset) {
       console.log('비디오와 이미지를 모두 선택해주세요');
-      // TODO: Alert 또는 Toast 메시지 표시
       return;
     }
-    console.log('Starting inference with:', {videoAsset, imageAsset});
-    // TODO: 합성 API 호출
+
+    setIsProcessing(true);
+    progress.setValue(0);
+
+    // Circular progress 애니메이션 (무한 반복)
+    Animated.loop(
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ).start();
+
+    // 3초 후 결과 표시 (mock)
+    setTimeout(() => {
+      setIsProcessing(false);
+      setResultVideo(videoAsset.uri); // mock: 원본 비디오를 결과로 사용
+
+      // 결과 카드로 자동 이동
+      swipeToResult();
+
+      Toast.show({
+        type: 'success',
+        text1: '합성 완료',
+        text2: '영상 합성이 완료되었습니다',
+        visibilityTime: 2000,
+        topOffset: 60,
+        text1Style: {
+          fontSize: 14,
+          fontWeight: '600',
+        },
+        text2Style: {
+          fontSize: 12,
+        },
+        props: {
+          style: {
+            height: 60,
+            minHeight: 60,
+          },
+        },
+      });
+    }, 3000);
   };
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       <Toast />
+
+      {/* 로딩 오버레이 */}
+      {isProcessing && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.circularProgress}>
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              }}>
+              <View
+                style={[
+                  styles.progressCircle,
+                  {borderTopColor: colors.primary},
+                ]}
+              />
+            </Animated.View>
+          </View>
+          <Text style={[styles.loadingText, {color: colors.text}]}>
+            로딩 중
+          </Text>
+        </View>
+      )}
+
+      {/* 결과 카드 */}
+      {resultVideo && !isProcessing && (
+        <View style={styles.resultOverlay}>
+          <View
+            style={[
+              styles.card,
+              styles.resultCard,
+              {backgroundColor: colors.card},
+            ]}>
+            <View style={styles.resultVideoArea}>
+              <View style={styles.previewContainer}>
+                <Video
+                  source={{uri: resultVideo}}
+                  paused={false}
+                  repeat={true}
+                  muted={true}
+                  style={styles.videoThumbnail}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.closeButton, {backgroundColor: colors.primary}]}
+              onPress={() => setResultVideo(null)}>
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <View style={styles.cardContainer} {...panResponder.panHandlers}>
         {/* 비디오 카드 */}
         <Animated.View
@@ -562,6 +684,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  // 로딩 오버레이
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  circularProgress: {
+    marginBottom: 16,
+  },
+  progressCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 4,
+    borderColor: 'transparent',
+    borderTopColor: '#6E4877',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // 결과 오버레이
+  resultOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  resultCard: {
+    // 기존 card 스타일 재사용
+  },
+  resultVideoArea: {
+    flex: 1,
+    width: '100%',
+    marginBottom: 24,
+  },
+  closeButton: {
+    width: '100%',
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
