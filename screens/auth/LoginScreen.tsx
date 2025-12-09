@@ -9,6 +9,7 @@ import {
 import {useTheme} from '../../context/ThemeContext';
 import {useAuth} from '../../context/AuthContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import SignUpScreen from './SignUpScreen';
 
 const LoginScreen: React.FC = () => {
   const {colors} = useTheme();
@@ -16,12 +17,23 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
 
   const handleLogin = () => {
-    // 로그인 로직 구현 (현재는 바로 로그인 처리)
-    console.log('Login:', {email, password, rememberMe});
-    login(); // 로그인 상태로 변경
+    // 입력값 검증
+    if (!email || !password) {
+      console.log('Email and password are required');
+      return;
+    }
+
+    // 로그인 상태로 변경 및 입력값 저장
+    login(email, password, rememberMe);
   };
+
+  // Sign Up 화면이 활성화되면 SignUpScreen 표시
+  if (showSignUp) {
+    return <SignUpScreen onBack={() => setShowSignUp(false)} />;
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
@@ -88,12 +100,19 @@ const LoginScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Login 버튼 */}
+      <TouchableOpacity
+        style={[styles.loginButton, {backgroundColor: colors.primary}]}
+        onPress={handleLogin}>
+        <Text style={[styles.loginButtonText, {color: '#FFFFFF'}]}>Login</Text>
+      </TouchableOpacity>
+
       {/* Sign Up Now 버튼 */}
       <TouchableOpacity
-        style={[styles.signUpButton, {backgroundColor: '#FFD6D6'}]}
-        onPress={handleLogin}>
-        <Text style={[styles.signUpButtonText, {color: '#000000'}]}>
-          Sign Up Now
+        style={[styles.signUpButton, {backgroundColor: colors.accent}]}
+        onPress={() => setShowSignUp(true)}>
+        <Text style={[styles.signUpButtonText, {color: colors.primaryDark}]}>
+          Sign Up
         </Text>
       </TouchableOpacity>
 
@@ -104,22 +123,26 @@ const LoginScreen: React.FC = () => {
 
       <View style={styles.socialButtonsContainer}>
         {/* 카카오톡 */}
-        <TouchableOpacity style={[styles.socialButton, {backgroundColor: '#FFE812'}]}>
+        <TouchableOpacity
+          style={[styles.socialButton, {backgroundColor: '#FFE812'}]}>
           <Icon name="comment" size={24} color="#000000" />
         </TouchableOpacity>
 
         {/* 네이버 */}
-        <TouchableOpacity style={[styles.socialButton, {backgroundColor: '#03C75A'}]}>
+        <TouchableOpacity
+          style={[styles.socialButton, {backgroundColor: '#03C75A'}]}>
           <Text style={styles.naverText}>N</Text>
         </TouchableOpacity>
 
         {/* Apple */}
-        <TouchableOpacity style={[styles.socialButton, {backgroundColor: '#000000'}]}>
+        <TouchableOpacity
+          style={[styles.socialButton, {backgroundColor: '#000000'}]}>
           <Icon name="apple" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         {/* Google */}
-        <TouchableOpacity style={[styles.socialButton, {backgroundColor: '#FFFFFF'}]}>
+        <TouchableOpacity
+          style={[styles.socialButton, {backgroundColor: '#FFFFFF'}]}>
           <Icon name="google" size={24} color="#DB4437" />
         </TouchableOpacity>
       </View>
@@ -172,6 +195,17 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: 14,
+  },
+  loginButton: {
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  loginButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   signUpButton: {
     height: 50,

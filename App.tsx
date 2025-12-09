@@ -39,7 +39,7 @@ function MainTabs(): React.JSX.Element {
             borderTopColor: colors.border,
           },
           tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.text + '80',
+          tabBarInactiveTintColor: colors.textSecondary,
         }}>
         <Tab.Screen
           name="Home"
