@@ -1,13 +1,11 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   Image,
   TouchableOpacity,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 
 const baseImages = [
@@ -88,18 +86,18 @@ const mockData = [
   },
 ];
 
-interface LikeScreenProps {
+interface SocialScreenProps {
   navigation?: any;
 }
 
-const LikeScreen: React.FC<LikeScreenProps> = ({navigation}) => {
+const SocialScreen: React.FC<SocialScreenProps> = ({navigation}) => {
   const {colors} = useTheme();
 
   const renderItem = ({item}) => (
     <TouchableOpacity
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
-      onPress={() => navigation?.navigate('LikeDetail', {item})}>
+      onPress={() => navigation?.navigate('SocialDetail', {item})}>
       <Image source={{uri: item.image}} style={styles.gridImage} />
     </TouchableOpacity>
   );
@@ -121,24 +119,6 @@ const LikeScreen: React.FC<LikeScreenProps> = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F3F8',
-    paddingHorizontal: 12,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#222',
-  },
-  // toggleBtn 제거
   gridImageWrapper: {
     flex: 1,
     aspectRatio: 1,
@@ -155,45 +135,6 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: '#E0E0E0',
   },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F3F3',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    marginRight: 12,
-    backgroundColor: '#E0E0E0',
-  },
-  textContainer: {
-    flex: 1,
-  },
-  title: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 2,
-    color: '#222',
-  },
-  description: {
-    fontSize: 13,
-    color: '#666',
-  },
-  time: {
-    fontSize: 13,
-    color: '#999',
-    marginLeft: 8,
-  },
 });
 
-export default LikeScreen;
+export default SocialScreen;

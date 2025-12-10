@@ -10,7 +10,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 
-interface LikeDetailScreenProps {
+interface SocialDetailScreenProps {
   route: {
     params: {
       item: {
@@ -25,7 +25,7 @@ interface LikeDetailScreenProps {
   navigation: any;
 }
 
-const LikeDetailScreen: React.FC<LikeDetailScreenProps> = ({
+const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   route,
   navigation,
 }) => {
@@ -155,4 +155,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LikeDetailScreen;
+export default SocialDetailScreen;

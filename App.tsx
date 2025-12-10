@@ -11,8 +11,8 @@ import {
   HomeScreen,
   RankingScreen,
   AlarmScreen,
-  LikeScreen,
-  LikeDetailScreen,
+  SocialScreen,
+  SocialDetailScreen,
   SettingScreen,
 } from './screens';
 import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
@@ -20,13 +20,13 @@ import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function LikeStack(): React.JSX.Element {
+function SocialStack(): React.JSX.Element {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="LikeMain" component={LikeScreen} />
+      <Stack.Screen name="SocialMain" component={SocialScreen} />
       <Stack.Screen
-        name="LikeDetail"
-        component={LikeDetailScreen}
+        name="SocialDetail"
+        component={SocialDetailScreen}
         options={{
           animation: 'slide_from_right',
         }}
@@ -93,12 +93,12 @@ function MainTabs(): React.JSX.Element {
           }}
         />
         <Tab.Screen
-          name="Like"
-          component={LikeStack}
+          name="Social"
+          component={SocialStack}
           options={{
             tabBarLabel: () => null,
             tabBarIcon: ({color, size}) => (
-              <Icon name="heart-outline" color={color} size={size} />
+              <Icon name="people-circle-outline" color={color} size={size} />
             ),
             headerShown: false,
           }}

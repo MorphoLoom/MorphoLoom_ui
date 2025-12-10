@@ -342,29 +342,40 @@ const HomeScreen: React.FC = () => {
 
       {isProcessing && (
         <View style={styles.loadingOverlay}>
-          <View style={styles.circularProgress}>
-            <Animated.View
-              style={{
-                transform: [
-                  {
-                    rotate: progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', '360deg'],
-                    }),
-                  },
-                ],
-              }}>
+          <View style={styles.loadingPopup}>
+            <View style={styles.circularProgress}>
+              {/* 배경 원 */}
               <View
                 style={[
-                  styles.progressCircle,
-                  {borderTopColor: colors.primary},
+                  styles.progressCircleBackground,
+                  {borderColor: `${colors.primary}30`},
                 ]}
               />
-            </Animated.View>
+              {/* 회전하는 원 */}
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  transform: [
+                    {
+                      rotate: progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg'],
+                      }),
+                    },
+                  ],
+                }}>
+                <View
+                  style={[
+                    styles.progressCircle,
+                    {borderTopColor: colors.primary},
+                  ]}
+                />
+              </Animated.View>
+            </View>
+            <Text style={[styles.loadingText, {color: colors.text}]}>
+              작업중
+            </Text>
           </View>
-          <Text style={[styles.loadingText, {color: colors.text}]}>
-            로딩 중
-          </Text>
         </View>
       )}
 
@@ -572,11 +583,22 @@ const HomeScreen: React.FC = () => {
                 />
               </View>
             </View>
-            <TouchableOpacity
-              style={[styles.closeButton, {backgroundColor: colors.primary}]}
-              onPress={swipeBackFromResult}>
-              <Text style={styles.closeButtonText}>다시 하기</Text>
-            </TouchableOpacity>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.saveButton, {backgroundColor: colors.primary}]}
+                onPress={() => console.log('저장하기')}>
+                <Icon name="save" size={20} color="#FFFFFF" />
+                <Text style={styles.saveButtonText}>저장</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.retryButton, {backgroundColor: '#FFFFFF', borderColor: colors.border}]}
+                onPress={swipeBackFromResult}>
+                <Icon name="refresh" size={20} color={colors.text} />
+                <Text style={[styles.retryButtonText, {color: colors.text}]}>다시 하기</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.bottomIndicator}>
               <View style={styles.stepIndicator}>
@@ -744,16 +766,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1000,
   },
+  loadingPopup: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: 200,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
   circularProgress: {
     marginBottom: 16,
+    width: 60,
+    height: 60,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressCircleBackground: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 5,
+    borderColor: '#E0E0E0',
   },
   progressCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    borderWidth: 4,
+    borderWidth: 5,
     borderColor: 'transparent',
-    borderTopColor: '#6E4877',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'transparent',
+    position: 'absolute',
   },
   loadingText: {
     fontSize: 16,
@@ -774,6 +827,39 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  saveButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  retryButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+  },
+  retryButtonText: {
+    fontSize: 16,
     fontWeight: '600',
   },
 });
