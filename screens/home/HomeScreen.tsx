@@ -68,26 +68,30 @@ const HomeScreen: React.FC = () => {
       },
       onPanResponderMove: (_, gestureState) => {
         const step = currentStepRef.current;
-        // 왼쪽 스와이프 (다음 카드로) - Step 0에서만
-        if (gestureState.dx < 0 && step === 0) {
+        // 왼쪽 스와이프 (다음 카드로)
+        if (gestureState.dx < 0 && step < 2) {
           translateX.setValue(gestureState.dx);
           nextCardTranslateX.setValue(width + gestureState.dx);
         }
-        // 오른쪽 스와이프 (이전 카드로) - Step 1에서만
-        else if (gestureState.dx > 0 && step === 1) {
+        // 오른쪽 스와이프 (이전 카드로)
+        else if (gestureState.dx > 0 && step > 0) {
           translateX.setValue(gestureState.dx);
           nextCardTranslateX.setValue(-width + gestureState.dx);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         const step = currentStepRef.current;
-        // 왼쪽 스와이프 - 다음 카드로 (Step 0에서만)
+        // 왼쪽 스와이프 - 다음 카드로
         if (gestureState.dx < -100 && step === 0) {
           swipeToNext();
+        } else if (gestureState.dx < -100 && step === 1 && resultVideo) {
+          swipeToResult();
         }
-        // 오른쪽 스와이프 - 이전 카드로 (Step 1에서만)
+        // 오른쪽 스와이프 - 이전 카드로
         else if (gestureState.dx > 100 && step === 1) {
           swipeToPrev();
+        } else if (gestureState.dx > 100 && step === 2) {
+          swipeBackFromResult();
         }
         // 원위치
         else {
@@ -238,22 +242,48 @@ const HomeScreen: React.FC = () => {
   };
 
   const swipeToResult = () => {
+    // Step 1에서 Step 2로 이동
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: -width,
-        duration: 300,
+        duration: 400,
         useNativeDriver: true,
       }),
       Animated.timing(nextCardTranslateX, {
         toValue: 0,
-        duration: 300,
+        duration: 400,
         useNativeDriver: true,
       }),
     ]).start(() => {
       currentStepRef.current = 2;
       setCurrentStep(2);
       translateX.setValue(0);
-      nextCardTranslateX.setValue(-width);
+      nextCardTranslateX.setValue(width);
+    });
+  };
+
+  const swipeBackFromResult = () => {
+    // Step 2에서 Step 0으로 완전 초기화
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: width * 2,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(nextCardTranslateX, {
+        toValue: width,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // 모든 상태 초기화
+      currentStepRef.current = 0;
+      setCurrentStep(0);
+      translateX.setValue(0);
+      nextCardTranslateX.setValue(width);
+      setResultVideo(null);
+      setVideoAsset(null);
+      setImageAsset(null);
     });
   };
 
@@ -339,36 +369,6 @@ const HomeScreen: React.FC = () => {
         </View>
       )}
 
-      {/* 결과 카드 */}
-      {resultVideo && !isProcessing && (
-        <View style={styles.resultOverlay}>
-          <View
-            style={[
-              styles.card,
-              styles.resultCard,
-              {backgroundColor: colors.card},
-            ]}>
-            <View style={styles.resultVideoArea}>
-              <View style={styles.previewContainer}>
-                <Video
-                  source={{uri: resultVideo}}
-                  paused={false}
-                  repeat={true}
-                  muted={true}
-                  style={styles.videoThumbnail}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[styles.closeButton, {backgroundColor: colors.primary}]}
-              onPress={() => setResultVideo(null)}>
-              <Text style={styles.closeButtonText}>닫기</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       <View style={styles.cardContainer} {...panResponder.panHandlers}>
         {/* 비디오 카드 */}
         <Animated.View
@@ -436,6 +436,9 @@ const HomeScreen: React.FC = () => {
             <View style={styles.stepIndicator}>
               <View style={[styles.dot, {backgroundColor: colors.primary}]} />
               <View style={[styles.dot, {backgroundColor: colors.border}]} />
+              {resultVideo && (
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+              )}
             </View>
             <Text style={[styles.swipeHint, {color: colors.textSecondary}]}>
               왼쪽으로 스와이프하여 계속
@@ -537,9 +540,56 @@ const HomeScreen: React.FC = () => {
             <View style={styles.stepIndicator}>
               <View style={[styles.dot, {backgroundColor: colors.border}]} />
               <View style={[styles.dot, {backgroundColor: colors.primary}]} />
+              {resultVideo && (
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+              )}
             </View>
           </View>
         </Animated.View>
+
+        {/* 결과 카드 - resultVideo가 있을 때만 렌더링 */}
+        {resultVideo && (
+          <Animated.View
+            style={[
+              styles.card,
+              styles.absoluteCard,
+              {
+                backgroundColor: colors.card,
+                transform: [
+                  {
+                    translateX:
+                      currentStep === 2 ? translateX : nextCardTranslateX,
+                  },
+                ],
+              },
+            ]}>
+            <View style={styles.resultVideoArea}>
+              <View style={styles.previewContainer}>
+                <Video
+                  source={{uri: resultVideo}}
+                  paused={false}
+                  repeat={true}
+                  muted={true}
+                  style={styles.videoThumbnail}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.closeButton, {backgroundColor: colors.primary}]}
+              onPress={swipeBackFromResult}>
+              <Text style={styles.closeButtonText}>다시 하기</Text>
+            </TouchableOpacity>
+
+            <View style={styles.bottomIndicator}>
+              <View style={styles.stepIndicator}>
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <View style={[styles.dot, {backgroundColor: colors.primary}]} />
+              </View>
+            </View>
+          </Animated.View>
+        )}
       </View>
     </View>
   );
@@ -711,21 +761,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  // 결과 오버레이
-  resultOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  resultCard: {
-    // 기존 card 스타일 재사용
   },
   resultVideoArea: {
     flex: 1,
