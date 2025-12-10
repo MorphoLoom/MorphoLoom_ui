@@ -16,6 +16,7 @@ import {
   SettingScreen,
 } from './screens';
 import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
+import {QueryProvider} from './context/QueryProvider';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -141,11 +142,13 @@ function AppContent(): React.JSX.Element {
 
 function App(): React.JSX.Element {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryProvider>
   );
 }
 
