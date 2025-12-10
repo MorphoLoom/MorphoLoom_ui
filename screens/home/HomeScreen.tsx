@@ -370,7 +370,6 @@ const HomeScreen: React.FC = () => {
       )}
 
       <View style={styles.cardContainer} {...panResponder.panHandlers}>
-        {/* 비디오 카드 */}
         <Animated.View
           style={[
             styles.card,
