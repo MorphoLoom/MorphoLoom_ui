@@ -547,7 +547,6 @@ const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* 결과 카드 - resultVideo가 있을 때만 렌더링 */}
         {resultVideo && (
           <Animated.View
             style={[
