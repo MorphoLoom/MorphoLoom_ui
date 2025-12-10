@@ -340,7 +340,6 @@ const HomeScreen: React.FC = () => {
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       <Toast />
 
-      {/* 로딩 오버레이 */}
       {isProcessing && (
         <View style={styles.loadingOverlay}>
           <View style={styles.circularProgress}>
