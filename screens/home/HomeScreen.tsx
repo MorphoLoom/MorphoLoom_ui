@@ -9,6 +9,7 @@ import {
   PanResponder,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -37,7 +38,10 @@ const HomeScreen: React.FC = () => {
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
   const currentStepRef = useRef(0);
   const videoPlayer = useRef<any>(null);
-  const progress = useRef(new Animated.Value(0)).current;
+
+  // 글로우 + 펄스 애니메이션
+  const glowOpacity = useRef(new Animated.Value(0)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
 
   // 탭에 포커스될 때 비디오 카드로 리셋
   useFocusEffect(
@@ -175,7 +179,7 @@ const HomeScreen: React.FC = () => {
         text1: '업로드 완료',
         text2: `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
         visibilityTime: 5000,
-        topOffset: 5,
+        topOffset: 30,
         text1Style: {
           fontSize: 14,
           fontWeight: '600',
@@ -219,7 +223,7 @@ const HomeScreen: React.FC = () => {
                 type === 'video' ? '비디오' : '이미지'
               }가 삭제되었습니다`,
               visibilityTime: 3000,
-              topOffset: 5,
+              topOffset: 30,
               text1Style: {
                 fontSize: 14,
                 fontWeight: '600',
@@ -294,16 +298,6 @@ const HomeScreen: React.FC = () => {
     }
 
     setIsProcessing(true);
-    progress.setValue(0);
-
-    // Circular progress 애니메이션 (무한 반복)
-    Animated.loop(
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-    ).start();
 
     // 3초 후 결과 표시 (mock)
     setTimeout(() => {
@@ -313,12 +307,45 @@ const HomeScreen: React.FC = () => {
       // 결과 카드로 자동 이동
       swipeToResult();
 
+      // 글로우 + 펄스 애니메이션 시작
+      Animated.sequence([
+        // 1. 글로우 페이드인
+        Animated.timing(glowOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        // 2. 펄스 효과 (1번 반복)
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseScale, {
+              toValue: 1.05,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseScale, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]),
+          {iterations: 1},
+        ),
+      ]).start(() => {
+        // 애니메이션 종료 후 글로우 페이드아웃
+        Animated.timing(glowOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      });
+
       Toast.show({
         type: 'success',
         text1: '합성 완료',
         text2: '영상 합성이 완료되었습니다',
         visibilityTime: 2000,
-        topOffset: 60,
+        topOffset: 30,
         text1Style: {
           fontSize: 14,
           fontWeight: '600',
@@ -343,35 +370,7 @@ const HomeScreen: React.FC = () => {
       {isProcessing && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingPopup}>
-            <View style={styles.circularProgress}>
-              {/* 배경 원 */}
-              <View
-                style={[
-                  styles.progressCircleBackground,
-                  {borderColor: `${colors.primary}30`},
-                ]}
-              />
-              {/* 회전하는 원 */}
-              <Animated.View
-                style={{
-                  position: 'absolute',
-                  transform: [
-                    {
-                      rotate: progress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg'],
-                      }),
-                    },
-                  ],
-                }}>
-                <View
-                  style={[
-                    styles.progressCircle,
-                    {borderTopColor: colors.primary},
-                  ]}
-                />
-              </Animated.View>
-            </View>
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.loadingText, {color: colors.text}]}>
               작업중
             </Text>
@@ -557,21 +556,44 @@ const HomeScreen: React.FC = () => {
         </Animated.View>
 
         {resultVideo && (
-          <Animated.View
-            style={[
-              styles.card,
-              styles.absoluteCard,
-              {
-                backgroundColor: colors.card,
-                transform: [
-                  {
-                    translateX:
-                      currentStep === 2 ? translateX : nextCardTranslateX,
-                  },
-                ],
-              },
-            ]}>
-            <View style={styles.resultVideoArea}>
+          <>
+            {/* 글로우 효과 레이어 */}
+            <Animated.View
+              style={[
+                styles.glowLayer,
+                {
+                  shadowColor: colors.primary,
+                  opacity: glowOpacity,
+                  zIndex: 100,
+                  transform: [
+                    {
+                      translateX:
+                        currentStep === 2 ? translateX : nextCardTranslateX,
+                    },
+                    {scale: pulseScale},
+                  ],
+                },
+              ]}
+            />
+
+            {/* 결과 카드 */}
+            <Animated.View
+              style={[
+                styles.card,
+                styles.absoluteCard,
+                {
+                  backgroundColor: colors.card,
+                  zIndex: 101,
+                  transform: [
+                    {
+                      translateX:
+                        currentStep === 2 ? translateX : nextCardTranslateX,
+                    },
+                    {scale: pulseScale},
+                  ],
+                },
+              ]}>
+              <View style={styles.resultVideoArea}>
               <View style={styles.previewContainer}>
                 <Video
                   source={{uri: resultVideo}}
@@ -608,6 +630,7 @@ const HomeScreen: React.FC = () => {
               </View>
             </View>
           </Animated.View>
+          </>
         )}
       </View>
     </View>
@@ -639,6 +662,20 @@ const styles = StyleSheet.create({
   },
   absoluteCard: {
     position: 'absolute',
+  },
+  glowLayer: {
+    position: 'absolute',
+    width: CARD_WIDTH,
+    height: height * 0.6,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 60,
+    elevation: 30,
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -781,32 +818,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-  },
-  circularProgress: {
-    marginBottom: 16,
-    width: 60,
-    height: 60,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressCircleBackground: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 5,
-    borderColor: '#E0E0E0',
-  },
-  progressCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 5,
-    borderColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-    position: 'absolute',
   },
   loadingText: {
     fontSize: 16,
