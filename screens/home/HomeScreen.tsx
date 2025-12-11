@@ -18,6 +18,14 @@ import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
+import {
+  uploadVideo,
+  uploadImage,
+  executeInference,
+  getInferenceStatus,
+  VideoUploadResponse,
+  ImageUploadResponse,
+} from '../../services/api/mock';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -34,6 +42,16 @@ const HomeScreen: React.FC = () => {
   const [imageAsset, setImageAsset] = useState<MediaAsset | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [resultVideo, setResultVideo] = useState<string | null>(null);
+
+  // 업로드 상태
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // 업로드된 파일 URL 저장
+  const [uploadedVideoUrl, setUploadedVideoUrl] =
+    useState<VideoUploadResponse | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] =
+    useState<ImageUploadResponse | null>(null);
 
   const translateX = useRef(new Animated.Value(0)).current;
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
@@ -162,24 +180,71 @@ const HomeScreen: React.FC = () => {
     });
 
     if (result.assets && result.assets[0]) {
-      console.log('Selected asset:', result.assets[0]);
-      const asset: MediaAsset = {
-        uri: result.assets[0].uri || '',
-        type,
-      };
+      const selectedFile = result.assets[0];
+      console.log('Selected asset:', selectedFile);
 
+      // 업로드 로딩 시작
       if (type === 'video') {
-        setVideoAsset(asset);
+        setIsUploadingVideo(true);
       } else {
-        setImageAsset(asset);
+        setIsUploadingImage(true);
       }
 
-      // 성공 토스트 표시
-      showToast.success(
-        '업로드 완료',
-        `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
-        {duration: 5000},
-      );
+      try {
+        const fileData = {
+          uri: selectedFile.uri,
+          type: selectedFile.type,
+          fileName: selectedFile.fileName,
+        };
+
+        // API 업로드
+        let uploadResponse;
+        if (type === 'video') {
+          uploadResponse = await uploadVideo(fileData);
+          console.log('Video upload response:', uploadResponse);
+          setUploadedVideoUrl(uploadResponse);
+        } else {
+          uploadResponse = await uploadImage(fileData);
+          console.log('Image upload response:', uploadResponse);
+          setUploadedImageUrl(uploadResponse);
+        }
+
+        // 업로드 성공 후 로컬 상태 업데이트 (미리보기 표시)
+        const asset: MediaAsset = {
+          uri: selectedFile.uri || '',
+          type,
+        };
+
+        if (type === 'video') {
+          setVideoAsset(asset);
+          setIsUploadingVideo(false);
+        } else {
+          setImageAsset(asset);
+          setIsUploadingImage(false);
+        }
+
+        // 성공 토스트 표시
+        showToast.success(
+          '업로드 완료',
+          `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
+          {duration: 3000},
+        );
+      } catch (error) {
+        console.error('Upload failed:', error);
+
+        // 로딩 종료
+        if (type === 'video') {
+          setIsUploadingVideo(false);
+        } else {
+          setIsUploadingImage(false);
+        }
+
+        showToast.error(
+          '업로드 실패',
+          `${type === 'video' ? '비디오' : '이미지'} 업로드에 실패했습니다`,
+          {duration: 3000},
+        );
+      }
     }
   };
 
@@ -256,64 +321,115 @@ const HomeScreen: React.FC = () => {
       setResultVideo(null);
       setVideoAsset(null);
       setImageAsset(null);
+      setUploadedVideoUrl(null);
+      setUploadedImageUrl(null);
     });
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!videoAsset || !imageAsset) {
       console.log('비디오와 이미지를 모두 선택해주세요');
       return;
     }
 
+    if (!uploadedVideoUrl || !uploadedImageUrl) {
+      showToast.error(
+        '업로드 오류',
+        '파일 업로드가 완료되지 않았습니다',
+        {duration: 3000},
+      );
+      return;
+    }
+
     setIsProcessing(true);
 
-    // 3초 후 결과 표시 (mock)
-    setTimeout(() => {
-      setIsProcessing(false);
-      setResultVideo(videoAsset.uri); // mock: 원본 비디오를 결과로 사용
+    try {
+      // 1. 추론 서비스 상태 확인
+      console.log('Checking inference service status...');
+      const statusResult = await getInferenceStatus();
+      console.log('Inference status:', statusResult);
 
-      // 결과 카드로 자동 이동
-      swipeToResult();
+      if (!statusResult.success) {
+        setIsProcessing(false);
+        Alert.alert(
+          '서비스 사용 불가',
+          '추론 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.',
+          [{text: '확인'}],
+        );
+        return;
+      }
 
-      // 글로우 + 펄스 애니메이션 시작
-      Animated.sequence([
-        // 1. 글로우 페이드인
-        Animated.timing(glowOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        // 2. 펄스 효과 (1번 반복)
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulseScale, {
-              toValue: 1.05,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-            Animated.timing(pulseScale, {
-              toValue: 1,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-          ]),
-          {iterations: 1},
-        ),
-      ]).start(() => {
-        // 애니메이션 종료 후 글로우 페이드아웃
-        Animated.timing(glowOpacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
+      // 2. AI 추론 실행
+      console.log('Executing inference...');
+      const inferenceResult = await executeInference({
+        sourcePath: uploadedImageUrl.fileUrl,
+        drivingPath: uploadedVideoUrl.fileUrl,
       });
 
-      showToast.success(
-        '합성 완료',
-        '영상 합성이 완료되었습니다',
-        {duration: 2000},
+      console.log('Inference result:', inferenceResult);
+
+      setIsProcessing(false);
+
+      if (inferenceResult.success && inferenceResult.resultVideoPath) {
+        setResultVideo(inferenceResult.resultVideoPath);
+
+        // 결과 카드로 자동 이동
+        swipeToResult();
+
+        // 글로우 + 펄스 애니메이션 시작
+        Animated.sequence([
+          // 1. 글로우 페이드인
+          Animated.timing(glowOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          // 2. 펄스 효과 (1번 반복)
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseScale, {
+                toValue: 1.05,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseScale, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+            ]),
+            {iterations: 1},
+          ),
+        ]).start(() => {
+          // 애니메이션 종료 후 글로우 페이드아웃
+          Animated.timing(glowOpacity, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }).start();
+        });
+
+        showToast.success(
+          '합성 완료',
+          '영상 합성이 완료되었습니다',
+          {duration: 2000},
+        );
+      } else {
+        showToast.error(
+          '합성 실패',
+          inferenceResult.error || '영상 합성에 실패했습니다',
+          {duration: 3000},
+        );
+      }
+    } catch (error) {
+      console.error('Inference failed:', error);
+      setIsProcessing(false);
+      showToast.error(
+        '합성 실패',
+        '영상 합성 중 오류가 발생했습니다',
+        {duration: 3000},
       );
-    }, 3000);
+    }
   };
 
   return (
@@ -356,8 +472,16 @@ const HomeScreen: React.FC = () => {
                 backgroundColor: videoAsset ? 'transparent' : colors.background,
               },
             ]}
-            onPress={() => handleMediaPick('video')}>
-            {videoAsset ? (
+            onPress={() => handleMediaPick('video')}
+            disabled={isUploadingVideo}>
+            {isUploadingVideo ? (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.uploadTitle, {color: colors.text}]}>
+                  업로드 중...
+                </Text>
+              </View>
+            ) : videoAsset ? (
               <>
                 <View style={styles.previewContainer}>
                   <Video
@@ -431,8 +555,16 @@ const HomeScreen: React.FC = () => {
                 backgroundColor: imageAsset ? 'transparent' : colors.background,
               },
             ]}
-            onPress={() => handleMediaPick('image')}>
-            {imageAsset ? (
+            onPress={() => handleMediaPick('image')}
+            disabled={isUploadingImage}>
+            {isUploadingImage ? (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.uploadTitle, {color: colors.text}]}>
+                  업로드 중...
+                </Text>
+              </View>
+            ) : imageAsset ? (
               <>
                 <View style={styles.previewContainer}>
                   <Image
