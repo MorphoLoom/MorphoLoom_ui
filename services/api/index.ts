@@ -1,12 +1,14 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
+import Config from 'react-native-config';
 
-// API 기본 설정
-const API_BASE_URL = 'http://localhost:8080/api'; // TODO: 환경변수로 관리
+// API 기본 설정 (환경변수에서 가져옴)
+const API_BASE_URL = Config.API_BASE_URL || 'http://localhost:8080/api';
+const API_TIMEOUT = parseInt(Config.API_TIMEOUT || '10000', 10);
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10초 타임아웃
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
