@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {SafeAreaView, StatusBar} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {SafeAreaView, StatusBar, View, ActivityIndicator} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -38,10 +38,18 @@ function SocialStack(): React.JSX.Element {
 
 function MainTabs(): React.JSX.Element {
   const {isDarkMode, colors} = useTheme();
+  const [isTabLoading, setIsTabLoading] = useState(false);
 
   const backgroundStyle = {
     backgroundColor: colors.background,
     flex: 1,
+  };
+
+  const handleTabPress = () => {
+    setIsTabLoading(true);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 300);
   };
 
   return (
@@ -51,6 +59,22 @@ function MainTabs(): React.JSX.Element {
         backgroundColor={colors.background}
       />
       <Header />
+      {isTabLoading && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            zIndex: 9999,
+          }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
       <Tab.Navigator
         screenOptions={{
           tabBarStyle: {
@@ -59,6 +83,9 @@ function MainTabs(): React.JSX.Element {
           },
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,
+        }}
+        screenListeners={{
+          tabPress: handleTabPress,
         }}>
         <Tab.Screen
           name="Home"

@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, StyleSheet, FlatList, Image} from 'react-native';
+import React, {useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, FlatList, Image, Animated} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {COLORS} from '../../constants/colors';
 import {useTheme} from '../../context/ThemeContext';
@@ -55,6 +55,46 @@ const RankingScreen = () => {
   const top3 = [mockData[1], mockData[0], mockData[2]];
   const rest = mockData.slice(3);
 
+  // 애니메이션 값들
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const top3Anims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+
+  useEffect(() => {
+    // Top 3 순차적 등장 (2등, 1등, 3등 순서)
+    Animated.stagger(
+      100,
+      top3Anims.map(anim =>
+        Animated.spring(anim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ),
+    ).start();
+
+    // 리스트 fade-in + slide-up
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const renderTopCircle = (item, rank) => {
     // 0: 2등(왼쪽), 1: 1등(가운데), 2: 3등(오른쪽)
     const positions = [
@@ -63,8 +103,29 @@ const RankingScreen = () => {
       styles.topCircleRight,
     ];
     const realRank = rank === 0 ? 2 : rank === 1 ? 1 : 3;
+
+    const animatedStyle = {
+      opacity: top3Anims[rank],
+      transform: [
+        {
+          scale: top3Anims[rank].interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.3, 1],
+          }),
+        },
+        {
+          translateY: top3Anims[rank].interpolate({
+            inputRange: [0, 1],
+            outputRange: [20, 0],
+          }),
+        },
+      ],
+    };
+
     return (
-      <View style={[styles.topCircle, positions[rank]]} key={item.id}>
+      <Animated.View
+        style={[styles.topCircle, positions[rank], animatedStyle]}
+        key={item.id}>
         {realRank === 1 && (
           <Ionicons
             name="trophy"
@@ -82,12 +143,20 @@ const RankingScreen = () => {
         <Text style={[styles.topCircleTitle, {color: colors.text}]}>
           {item.title}
         </Text>
-      </View>
+      </Animated.View>
     );
   };
 
   const renderItem = ({item}) => (
-    <View style={[styles.listItem, {backgroundColor: colors.card}]}>
+    <Animated.View
+      style={[
+        styles.listItem,
+        {
+          backgroundColor: colors.card,
+          opacity: fadeAnim,
+          transform: [{translateY: slideAnim}],
+        },
+      ]}>
       <Image source={{uri: item.image}} style={styles.avatar} />
       <View style={styles.textContainer}>
         <Text style={[styles.title, {color: colors.text}]}>{item.title}</Text>
@@ -98,7 +167,7 @@ const RankingScreen = () => {
       <Text style={[styles.time, {color: colors.textSecondary}]}>
         {item.time}
       </Text>
-    </View>
+    </Animated.View>
   );
 
   return (

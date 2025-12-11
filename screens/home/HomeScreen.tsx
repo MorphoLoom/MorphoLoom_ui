@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
+import {showToast} from '../../utils/toast';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -174,26 +175,11 @@ const HomeScreen: React.FC = () => {
       }
 
       // 성공 토스트 표시
-      Toast.show({
-        type: 'success',
-        text1: '업로드 완료',
-        text2: `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
-        visibilityTime: 5000,
-        topOffset: 30,
-        text1Style: {
-          fontSize: 14,
-          fontWeight: '600',
-        },
-        text2Style: {
-          fontSize: 12,
-        },
-        props: {
-          style: {
-            height: 60,
-            minHeight: 60,
-          },
-        },
-      });
+      showToast.success(
+        '업로드 완료',
+        `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
+        {duration: 5000},
+      );
     }
   };
 
@@ -216,28 +202,10 @@ const HomeScreen: React.FC = () => {
             }
 
             // 삭제 토스트 표시
-            Toast.show({
-              type: 'info',
-              text1: '삭제 완료',
-              text2: `${
-                type === 'video' ? '비디오' : '이미지'
-              }가 삭제되었습니다`,
-              visibilityTime: 3000,
-              topOffset: 30,
-              text1Style: {
-                fontSize: 14,
-                fontWeight: '600',
-              },
-              text2Style: {
-                fontSize: 12,
-              },
-              props: {
-                style: {
-                  height: 60,
-                  minHeight: 60,
-                },
-              },
-            });
+            showToast.info(
+              '삭제 완료',
+              `${type === 'video' ? '비디오' : '이미지'}가 삭제되었습니다`,
+            );
           },
           style: 'destructive',
         },
@@ -340,26 +308,11 @@ const HomeScreen: React.FC = () => {
         }).start();
       });
 
-      Toast.show({
-        type: 'success',
-        text1: '합성 완료',
-        text2: '영상 합성이 완료되었습니다',
-        visibilityTime: 2000,
-        topOffset: 30,
-        text1Style: {
-          fontSize: 14,
-          fontWeight: '600',
-        },
-        text2Style: {
-          fontSize: 12,
-        },
-        props: {
-          style: {
-            height: 60,
-            minHeight: 60,
-          },
-        },
-      });
+      showToast.success(
+        '합성 완료',
+        '영상 합성이 완료되었습니다',
+        {duration: 2000},
+      );
     }, 3000);
   };
 
