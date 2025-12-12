@@ -1,5 +1,5 @@
 import {useInfiniteQuery} from '@tanstack/react-query';
-import {fetchRankings} from '../services/api/rankingApi';
+import {fetchRankings} from '../services/api';
 
 // 랭킹 목록 무한 스크롤
 export const useRankings = (

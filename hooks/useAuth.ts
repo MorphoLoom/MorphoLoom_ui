@@ -1,5 +1,5 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {login, logout, register} from '../services/api/authApi';
+import {login, logout, register} from '../services/api';
 import type {LoginRequest, RegisterRequest} from '../types/api';
 
 // 로그인 mutation

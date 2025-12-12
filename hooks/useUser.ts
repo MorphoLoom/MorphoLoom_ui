@@ -3,7 +3,7 @@ import {
   fetchUserProfile,
   updateProfile,
   updateSettings,
-} from '../services/api/userApi';
+} from '../services/api';
 import type {UserSettings} from '../types/api';
 
 // 사용자 프로필 조회

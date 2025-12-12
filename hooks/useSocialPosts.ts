@@ -5,7 +5,7 @@ import {
   fetchPostDetail,
   likePost,
   unlikePost,
-} from '../services/api/socialApi';
+} from '../services/api';
 import type {LikeRequest} from '../types/api';
 
 // 전체 게시물 무한 스크롤

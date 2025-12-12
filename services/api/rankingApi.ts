@@ -1,4 +1,4 @@
-import apiFetch from './index';
+import apiFetch from './apiClient';
 import type {ApiResponse, RankingResponse} from '../../types/api';
 
 // 랭킹 목록 조회

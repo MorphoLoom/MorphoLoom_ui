@@ -1,10 +1,7 @@
 // AI 추론 API
 
-import axios from 'axios';
+import {mockApiClient} from './apiClient';
 import {InferenceRequest, InferenceStatusResponse} from './types';
-
-// 환경변수 fallback
-const API_BASE_URL = 'http://10.10.110.29:18888/api/v1';
 
 /**
  * AI 추론 실행
@@ -23,9 +20,12 @@ export const executeInference = async (
     userId: 1,
   };
 
-  const response = await axios.post<InferenceStatusResponse>(
-    `${API_BASE_URL}/inference/execute`,
+  const response = await mockApiClient.post<InferenceStatusResponse>(
+    '/inference/execute',
     requestBody,
+    {
+      timeout: 60000, // AI 추론은 60초 timeout
+    },
   );
 
   return response.data;
@@ -40,8 +40,8 @@ export const executeInference = async (
  * - 503: 사용 불가
  */
 export const getInferenceStatus = async (): Promise<InferenceStatusResponse> => {
-  const response = await axios.get<InferenceStatusResponse>(
-    `${API_BASE_URL}/inference/status`,
+  const response = await mockApiClient.get<InferenceStatusResponse>(
+    '/inference/status',
   );
 
   return response.data;
