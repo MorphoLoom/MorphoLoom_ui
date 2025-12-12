@@ -79,24 +79,69 @@ export interface RankingResponse {
 }
 
 // 인증 관련 타입
+export interface SendVerificationRequest {
+  email: string;
+}
+
+export interface SendVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  verificationCode: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface AuthUser {
+  userId: number;
+  email: string;
+  username: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: AuthUser;
+  isNewUser: boolean;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  user: User;
-}
+export interface LoginResponse extends AuthResponse {}
 
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
+  username: string;
+  socialProvider?: string;
 }
 
-export interface RegisterResponse {
-  userId: string;
+export interface RegisterResponse extends AuthResponse {}
+
+export interface SocialLoginRequest {
+  provider: string;
+  token: string;
+}
+
+export interface SocialLoginResponse extends AuthResponse {}
+
+export interface ResetPasswordRequest {
+  email: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
   message: string;
 }
 

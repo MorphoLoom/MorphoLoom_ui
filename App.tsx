@@ -6,6 +6,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Header from './app/Header';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SplashScreen from 'react-native-splash-screen';
+import Toast from 'react-native-toast-message';
 import {
   LoginScreen,
   HomeScreen,
@@ -173,6 +174,7 @@ function App(): React.JSX.Element {
       <ThemeProvider>
         <AuthProvider>
           <AppContent />
+          <Toast />
         </AuthProvider>
       </ThemeProvider>
     </QueryProvider>

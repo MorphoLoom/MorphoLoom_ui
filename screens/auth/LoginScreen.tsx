@@ -5,34 +5,67 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
-import {useAuth} from '../../context/AuthContext';
+import {useAuth as useAuthContext} from '../../context/AuthContext';
+import {useLogin} from '../../hooks/useAuth';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import {showToast} from '../../utils/toast';
 import SignUpScreen from './SignUpScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
 
 const LoginScreen: React.FC = () => {
   const {colors} = useTheme();
-  const {login} = useAuth();
+  const {setAuthData} = useAuthContext();
+  const loginMutation = useLogin();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // 입력값 검증
     if (!email || !password) {
-      console.log('Email and password are required');
+      showToast.error('이메일과 비밀번호를 입력해주세요');
       return;
     }
 
-    // 로그인 상태로 변경 및 입력값 저장
-    login(email, password, rememberMe);
+    try {
+      const response = await loginMutation.mutateAsync({email, password});
+
+      // AuthContext에 토큰과 사용자 정보 저장
+      await setAuthData(
+        response.accessToken,
+        response.refreshToken,
+        response.user,
+      );
+
+      // 새 사용자인 경우 추가 안내
+      if (response.isNewUser) {
+        showToast.success('환영합니다!', 'MorphoLoom에 오신 것을 환영합니다!');
+      }
+    } catch (error: any) {
+      console.error('로그인 에러:', error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        '이메일 또는 비밀번호가 올바르지 않습니다';
+      showToast.error('로그인 실패', errorMessage);
+    }
   };
 
   // Sign Up 화면이 활성화되면 SignUpScreen 표시
   if (showSignUp) {
     return <SignUpScreen onBack={() => setShowSignUp(false)} />;
+  }
+
+  // Forgot Password 화면이 활성화되면 ForgotPasswordScreen 표시
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />
+    );
   }
 
   return (
@@ -93,9 +126,9 @@ const LoginScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowForgotPassword(true)}>
           <Text style={[styles.forgotPassword, {color: colors.text}]}>
-            Forgot password?
+            비밀번호 찾기
           </Text>
         </TouchableOpacity>
       </View>
@@ -103,8 +136,15 @@ const LoginScreen: React.FC = () => {
       {/* Login 버튼 */}
       <TouchableOpacity
         style={[styles.loginButton, {backgroundColor: colors.primary}]}
-        onPress={handleLogin}>
-        <Text style={[styles.loginButtonText, {color: '#FFFFFF'}]}>Login</Text>
+        onPress={handleLogin}
+        disabled={loginMutation.isPending}>
+        {loginMutation.isPending ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={[styles.loginButtonText, {color: '#FFFFFF'}]}>
+            Login
+          </Text>
+        )}
       </TouchableOpacity>
 
       {/* Sign Up Now 버튼 */}

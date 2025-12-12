@@ -1,9 +1,9 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
-import Config from 'react-native-config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// API 기본 설정 (환경변수에서 가져옴)
-const API_BASE_URL = Config.API_BASE_URL || 'http://localhost:8080/api';
-const API_TIMEOUT = parseInt(Config.API_TIMEOUT || '10000', 10);
+// API 기본 설정 (하드코딩)
+const API_BASE_URL = 'http://10.10.110.29:18080/api/v1';
+const API_TIMEOUT = 30000;
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -17,8 +17,8 @@ const apiClient = axios.create({
 // Request 인터셉터: 모든 요청에 토큰 자동 추가
 apiClient.interceptors.request.use(
   async config => {
-    // TODO: AsyncStorage에서 토큰 가져오기
-    const token = ''; // await AsyncStorage.getItem('token');
+    // AsyncStorage에서 토큰 가져오기
+    const token = await AsyncStorage.getItem('accessToken');
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -67,12 +67,22 @@ async function apiFetch<T>(
   endpoint: string,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  const response = await apiClient.request<T>({
-    url: endpoint,
-    ...config,
-  });
-
-  return response.data;
+  try {
+    console.log('🔵 API 요청:', endpoint, config?.method, config?.data);
+    const response = await apiClient.request<T>({
+      url: endpoint,
+      ...config,
+    });
+    console.log('🟢 API 응답:', endpoint, response.status, response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('🔴 API 에러:', endpoint);
+    console.error('에러 전체:', error);
+    console.error('에러 response:', error.response);
+    console.error('에러 response.data:', error.response?.data);
+    console.error('에러 message:', error.message);
+    throw error;
+  }
 }
 
 export default apiFetch;

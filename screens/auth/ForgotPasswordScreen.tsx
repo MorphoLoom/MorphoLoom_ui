@@ -11,27 +11,28 @@ import {
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import {
-  useSignup,
   useSendVerification,
   useVerifyEmail,
+  useResetPassword,
 } from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
 
-interface SignUpScreenProps {
+interface ForgotPasswordScreenProps {
   onBack: () => void;
 }
 
-const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
+const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
+  onBack,
+}) => {
   const {colors} = useTheme();
-  const signupMutation = useSignup();
   const sendVerificationMutation = useSendVerification();
   const verifyEmailMutation = useVerifyEmail();
+  const resetPasswordMutation = useResetPassword();
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
@@ -49,26 +50,18 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
       return;
     }
 
-    sendVerificationMutation.mutate(
-      {email},
-      {
-        onSuccess: () => {
-          setIsVerificationSent(true);
-          showToast.success(
-            '인증번호 발송',
-            '이메일로 인증번호가 발송되었습니다',
-          );
-        },
-        onError: (error: any) => {
-          console.error('인증번호 발송 에러:', error);
-          const errorMessage =
-            error?.response?.data?.message ||
-            error?.message ||
-            '인증번호 발송 중 오류가 발생했습니다';
-          showToast.error('인증번호 발송 실패', errorMessage);
-        },
-      },
-    );
+    try {
+      await sendVerificationMutation.mutateAsync({email});
+      setIsVerificationSent(true);
+      showToast.success('인증번호 발송', '이메일로 인증번호가 발송되었습니다');
+    } catch (error: any) {
+      console.error('인증번호 발송 에러:', error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        '인증번호 발송 중 오류가 발생했습니다';
+      showToast.error('인증번호 발송 실패', errorMessage);
+    }
   };
 
   // 이메일 인증번호 확인
@@ -78,31 +71,26 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
       return;
     }
 
-    verifyEmailMutation.mutate(
-      {
+    try {
+      await verifyEmailMutation.mutateAsync({
         email,
         verificationCode,
-      },
-      {
-        onSuccess: () => {
-          setIsEmailVerified(true);
-          showToast.success('인증 완료', '이메일 인증이 완료되었습니다');
-        },
-        onError: (error: any) => {
-          console.error('이메일 인증 에러:', error);
-          const errorMessage =
-            error?.response?.data?.message ||
-            error?.message ||
-            '인증번호가 올바르지 않습니다';
-          showToast.error('인증 실패', errorMessage);
-        },
-      },
-    );
+      });
+      setIsEmailVerified(true);
+      showToast.success('인증 완료', '이메일 인증이 완료되었습니다');
+    } catch (error: any) {
+      console.error('이메일 인증 에러:', error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        '인증번호가 올바르지 않습니다';
+      showToast.error('인증 실패', errorMessage);
+    }
   };
 
-  const handleSignUp = async () => {
+  const handleResetPassword = async () => {
     // 입력값 검증
-    if (!email || !password || !confirmPassword || !username) {
+    if (!email || !verificationCode || !newPassword || !confirmPassword) {
       showToast.error('모든 필드를 입력해주세요');
       return;
     }
@@ -120,42 +108,36 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
       return;
     }
 
-    // 사용자 이름 길이 검증
-    if (username.length < 2) {
-      showToast.error('사용자 이름은 2자 이상이어야 합니다');
-      return;
-    }
-
     // 비밀번호 길이 검증
-    if (password.length < 6) {
+    if (newPassword.length < 6) {
       showToast.error('비밀번호는 6자 이상이어야 합니다');
       return;
     }
 
     // 비밀번호 일치 확인
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       showToast.error('비밀번호가 일치하지 않습니다');
       return;
     }
 
     try {
-      await signupMutation.mutateAsync({
+      await resetPasswordMutation.mutateAsync({
         email,
-        password,
-        username,
+        newPassword,
       });
 
-      showToast.success('회원가입 완료', '로그인 페이지로 이동합니다');
-
-      // 로그인 페이지로 이동
-      onBack();
+      showToast.success('비밀번호 재설정 완료', '새 비밀번호로 로그인해주세요');
+      // 잠시 후 로그인 화면으로 돌아가기
+      setTimeout(() => {
+        onBack();
+      }, 1500);
     } catch (error: any) {
-      console.error('회원가입 에러:', error);
+      console.error('비밀번호 재설정 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        '회원가입 중 오류가 발생했습니다';
-      showToast.error('회원가입 실패', errorMessage);
+        '비밀번호 재설정 중 오류가 발생했습니다';
+      showToast.error('비밀번호 재설정 실패', errorMessage);
     }
   };
 
@@ -171,7 +153,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
         <Ionicons name="arrow-back-outline" size={24} color="#fff" />
       </TouchableOpacity>
       {/* 제목 */}
-      <Text style={[styles.title, {color: colors.text}]}>회원가입</Text>
+      <Text style={[styles.title, {color: colors.text}]}>
+        비밀번호 찾기
+      </Text>
 
       {/* 이메일 입력 + 인증 버튼 */}
       <View style={styles.inputWithButton}>
@@ -232,6 +216,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
             value={verificationCode}
             onChangeText={setVerificationCode}
             keyboardType="number-pad"
+            maxLength={6}
           />
           <TouchableOpacity
             style={[
@@ -243,7 +228,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
             ]}
             onPress={handleVerifyEmail}
             disabled={
-              verifyEmailMutation.isPending || verificationCode.length !== 6
+              verificationCode.length !== 6 || verifyEmailMutation.isPending
             }>
             {verifyEmailMutation.isPending ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -254,7 +239,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
         </View>
       )}
 
-      {/* Username 입력 */}
+      {/* 새 비밀번호 입력 */}
       <TextInput
         style={[
           styles.input,
@@ -264,31 +249,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
             color: colors.text,
           },
         ]}
-        placeholder="사용자 이름"
+        placeholder="새 비밀번호"
         placeholderTextColor={colors.text + '60'}
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-      />
-
-      {/* 비밀번호 입력 */}
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.card,
-            borderColor: colors.border,
-            color: colors.text,
-          },
-        ]}
-        placeholder="비밀번호"
-        placeholderTextColor={colors.text + '60'}
-        value={password}
-        onChangeText={setPassword}
+        value={newPassword}
+        onChangeText={setNewPassword}
         secureTextEntry
       />
 
-      {/* 비밀번호 확인 입력 */}
+      {/* 새 비밀번호 확인 입력 */}
       <TextInput
         style={[
           styles.input,
@@ -298,23 +266,23 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
             color: colors.text,
           },
         ]}
-        placeholder="비밀번호 확인"
+        placeholder="새 비밀번호 확인"
         placeholderTextColor={colors.text + '60'}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
 
-      {/* Sign Up 버튼 */}
+      {/* 확인 버튼 */}
       <TouchableOpacity
-        style={[styles.signUpButton, {backgroundColor: colors.primary}]}
-        onPress={handleSignUp}
-        disabled={signupMutation.isPending}>
-        {signupMutation.isPending ? (
+        style={[styles.resetButton, {backgroundColor: colors.primary}]}
+        onPress={handleResetPassword}
+        disabled={resetPasswordMutation.isPending}>
+        {resetPasswordMutation.isPending ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={[styles.signUpButtonText, {color: '#FFFFFF'}]}>
-            가입하기
+          <Text style={[styles.resetButtonText, {color: '#FFFFFF'}]}>
+            확인
           </Text>
         )}
       </TouchableOpacity>
@@ -322,10 +290,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
       {/* 로그인으로 돌아가기 */}
       <View style={styles.loginContainer}>
         <Text style={[styles.loginText, {color: colors.textSecondary}]}>
-          이미 계정이 있으신가요?{' '}
+          비밀번호가 기억나셨나요?{' '}
         </Text>
         <TouchableOpacity onPress={onBack}>
-          <Text style={[styles.loginLink, {color: colors.primary}]}>로그인</Text>
+          <Text style={[styles.loginLink, {color: colors.primary}]}>
+            로그인
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -391,7 +361,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontSize: 16,
   },
-  signUpButton: {
+  resetButton: {
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
@@ -399,7 +369,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 30,
   },
-  signUpButtonText: {
+  resetButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
@@ -417,4 +387,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUpScreen;
+export default ForgotPasswordScreen;
