@@ -2,12 +2,11 @@ import {useState} from 'react';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {Alert} from 'react-native';
 import {showToast} from '../utils/toast';
-import {
-  uploadVideo,
-  uploadImage,
+import {uploadVideo, uploadImage} from '../services/api/contentApi';
+import type {
   VideoUploadResponse,
   ImageUploadResponse,
-} from '../services/api/mock';
+} from '../types/api';
 
 interface MediaAsset {
   uri: string;

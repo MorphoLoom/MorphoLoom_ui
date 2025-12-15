@@ -1,11 +1,10 @@
 import {useState} from 'react';
 import {showToast} from '../utils/toast';
-import {
-  executeInference,
-  getInferenceStatus,
+import {executeInference, getInferenceStatus} from '../services/api/inferenceApi';
+import type {
   VideoUploadResponse,
   ImageUploadResponse,
-} from '../services/api/mock';
+} from '../types/api';
 
 export const useInference = () => {
   const [isProcessing, setIsProcessing] = useState(false);

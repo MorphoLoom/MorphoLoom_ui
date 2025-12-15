@@ -204,3 +204,31 @@ export interface CreationLikeResponse {
   liked: boolean;
   likes: number;
 }
+
+// 컨텐츠 업로드 관련 타입
+export interface VideoUploadResponse {
+  videoId: string;
+  fileUrl: string;
+  createdAt: string;
+}
+
+export interface ImageUploadResponse {
+  imageId: string;
+  fileUrl: string;
+  createdAt: string;
+}
+
+// AI 추론 관련 타입
+export interface InferenceRequest {
+  sourcePath: string;
+  drivingPath: string;
+  userId?: number;
+}
+
+export interface InferenceStatusResponse {
+  success: boolean;
+  message: string;
+  executedCommand?: string;
+  resultVideoPath?: string;
+  error?: string;
+}

@@ -18,14 +18,15 @@ import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
+import {uploadVideo, uploadImage} from '../../services/api/contentApi';
 import {
-  uploadVideo,
-  uploadImage,
   executeInference,
   getInferenceStatus,
+} from '../../services/api/inferenceApi';
+import type {
   VideoUploadResponse,
   ImageUploadResponse,
-} from '../../services/api/mock';
+} from '../../types/api';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;

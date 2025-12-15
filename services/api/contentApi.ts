@@ -1,7 +1,5 @@
-// 이미지·비디오 관리 API
-
-import {mockApiClient} from './apiClient';
-import {VideoUploadResponse, ImageUploadResponse} from './types';
+import apiFetch from './apiClient';
+import type {VideoUploadResponse, ImageUploadResponse} from '../../types/api';
 
 /**
  * 비디오 업로드
@@ -15,18 +13,14 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
     name: file.fileName || 'video.mp4',
   } as any);
 
-  const response = await mockApiClient.post<VideoUploadResponse>(
-    '/content/videos/upload',
-    formData,
-    {
-      headers: {
-        'X-User-Id': '1',
-        'Content-Type': 'multipart/form-data',
-      },
+  return apiFetch('/content/videos/upload', {
+    method: 'POST',
+    data: formData,
+    headers: {
+      'X-User-Id': '1',
+      'Content-Type': 'multipart/form-data',
     },
-  );
-
-  return response.data;
+  });
 };
 
 /**
@@ -41,16 +35,12 @@ export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
     name: file.fileName || 'image.png',
   } as any);
 
-  const response = await mockApiClient.post<ImageUploadResponse>(
-    '/content/images/upload',
-    formData,
-    {
-      headers: {
-        'X-User-Id': '1',
-        'Content-Type': 'multipart/form-data',
-      },
+  return apiFetch('/content/images/upload', {
+    method: 'POST',
+    data: formData,
+    headers: {
+      'X-User-Id': '1',
+      'Content-Type': 'multipart/form-data',
     },
-  );
-
-  return response.data;
+  });
 };
