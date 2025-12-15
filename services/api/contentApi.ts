@@ -47,16 +47,7 @@ export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
 
 /**
  * 비디오를 갤러리에 저장
- *
- * NOTE: @react-native-camera-roll/camera-roll 라이브러리 필요
- * 설치: npm install @react-native-camera-roll/camera-roll
- *
- * Android: AndroidManifest.xml에 권한 필요
- * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
- *
- * iOS: Info.plist에 권한 필요
- * <key>NSPhotoLibraryAddUsageDescription</key>
- */
+*/
 export const saveVideoToGallery = async (
   videoPath: string,
 ): Promise<{success: boolean; message: string}> => {
@@ -85,9 +76,7 @@ export const saveVideoToGallery = async (
 
 /**
  * 임시 비디오 파일 삭제
- *
- * NOTE: react-native-fs 라이브러리 필요
- */
+*/
 export const deleteTempVideo = async (
   videoPath: string,
 ): Promise<{success: boolean}> => {
