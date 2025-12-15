@@ -1,43 +1,40 @@
 import {useInfiniteQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {
-  fetchAllPosts,
-  fetchLikedPosts,
-  fetchPostDetail,
-  likePost,
-  unlikePost,
+  fetchCreations,
+  createCreation,
+  likeCreation,
+  unlikeCreation,
+  fetchMyCreations,
+  deleteMyCreation,
 } from '../services/api';
-import type {LikeRequest} from '../types/api';
+import type {CreateCreationRequest} from '../types/api';
 
-// 전체 게시물 무한 스크롤
-export const useAllPosts = (
-  sortBy: 'latest' | 'popular' | 'trending' = 'latest',
-) => {
+// 창작물 목록 무한 스크롤
+export const useCreations = (sort: string = 'latest') => {
   return useInfiniteQuery({
-    queryKey: ['social', 'all', sortBy],
-    queryFn: ({pageParam = 1}) => fetchAllPosts(pageParam, 20, sortBy),
-    getNextPageParam: lastPage => {
-      const {currentPage, totalPages} = lastPage.data.pagination;
-      // 다음 페이지가 있고 데이터가 있으면 다음 페이지 번호 반환
-      if (currentPage < totalPages && lastPage.data.videos.length > 0) {
-        return currentPage + 1;
+    queryKey: ['creations', 'all', sort],
+    queryFn: ({pageParam = 1}) => fetchCreations(pageParam, 20, sort),
+    getNextPageParam: (lastPage, allPages) => {
+      // 다음 페이지가 있으면 현재 페이지 + 1 반환
+      if (lastPage.items.length === 20) {
+        return allPages.length + 1;
       }
       return undefined; // 더 이상 페이지 없음
     },
     initialPageParam: 1,
     staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
-    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지 (구 cacheTime)
+    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
   });
 };
 
-// 좋아요한 게시물 무한 스크롤
-export const useLikedPosts = () => {
+// 내 창작물 목록 무한 스크롤
+export const useMyCreations = (sort: string = 'latest') => {
   return useInfiniteQuery({
-    queryKey: ['social', 'liked'],
-    queryFn: ({pageParam = 1}) => fetchLikedPosts(pageParam, 20),
-    getNextPageParam: lastPage => {
-      const {currentPage, totalPages} = lastPage.data.pagination;
-      if (currentPage < totalPages && lastPage.data.likedVideos.length > 0) {
-        return currentPage + 1;
+    queryKey: ['creations', 'my', sort],
+    queryFn: ({pageParam = 1}) => fetchMyCreations(pageParam, 20, sort),
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.items.length === 20) {
+        return allPages.length + 1;
       }
       return undefined;
     },
@@ -47,50 +44,62 @@ export const useLikedPosts = () => {
   });
 };
 
-// 게시물 상세 조회 (단일 조회는 useQuery 사용)
-export const usePostDetail = (videoId: string) => {
-  return useInfiniteQuery({
-    queryKey: ['social', 'detail', videoId],
-    queryFn: () => fetchPostDetail(videoId),
-    enabled: !!videoId, // videoId가 있을 때만 실행
-    staleTime: 3 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    initialPageParam: 1,
-    getNextPageParam: () => undefined, // 단일 페이지이므로 다음 페이지 없음
+// 창작물 등록 mutation
+export const useCreateCreation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: CreateCreationRequest) => createCreation(request),
+    onSuccess: () => {
+      // 전체 창작물 목록 무효화
+      queryClient.invalidateQueries({queryKey: ['creations', 'all']});
+      // 내 창작물 목록 무효화
+      queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+    },
   });
 };
 
 // 좋아요 추가 mutation
-export const useLikePost = () => {
+export const useLikeCreation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: LikeRequest) => likePost(request),
-    onSuccess: (data, variables) => {
-      // 전체 게시물 목록 무효화 (다시 fetch)
-      queryClient.invalidateQueries({queryKey: ['social', 'all']});
-      // 좋아요 목록 무효화
-      queryClient.invalidateQueries({queryKey: ['social', 'liked']});
-      // 해당 게시물 상세 무효화
-      queryClient.invalidateQueries({
-        queryKey: ['social', 'detail', variables.videoId],
-      });
+    mutationFn: (creationId: string) => likeCreation(creationId),
+    onSuccess: () => {
+      // 전체 창작물 목록 무효화
+      queryClient.invalidateQueries({queryKey: ['creations', 'all']});
+      // 내 창작물 목록 무효화
+      queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      // 랭킹 무효화 (좋아요 수가 바뀌면 랭킹도 영향)
+      queryClient.invalidateQueries({queryKey: ['creations', 'ranking']});
     },
   });
 };
 
 // 좋아요 취소 mutation
-export const useUnlikePost = () => {
+export const useUnlikeCreation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (videoId: string) => unlikePost(videoId),
-    onSuccess: (data, videoId) => {
-      queryClient.invalidateQueries({queryKey: ['social', 'all']});
-      queryClient.invalidateQueries({queryKey: ['social', 'liked']});
-      queryClient.invalidateQueries({
-        queryKey: ['social', 'detail', videoId],
-      });
+    mutationFn: (creationId: string) => unlikeCreation(creationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['creations', 'all']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'ranking']});
+    },
+  });
+};
+
+// 내 창작물 삭제 mutation
+export const useDeleteMyCreation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (creationId: string) => deleteMyCreation(creationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['creations', 'all']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'ranking']});
     },
   });
 };

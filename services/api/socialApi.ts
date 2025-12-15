@@ -1,52 +1,62 @@
 import apiFetch from './apiClient';
 import type {
-  ApiResponse,
-  SocialFeedResponse,
-  LikedVideosResponse,
-  Video,
-  LikeRequest,
-  LikeResponse,
+  CreationListResponse,
+  Creation,
+  CreateCreationRequest,
+  CreationLikeResponse,
 } from '../../types/api';
 
-// 전체 게시물 목록 조회 (공개 갤러리)
-export const fetchAllPosts = async (
+// ========== 창작물(Creation) 관련 API ==========
+
+// 1. 창작물 목록 조회
+export const fetchCreations = async (
   page: number = 1,
-  limit: number = 20,
-  sortBy: 'latest' | 'popular' | 'trending' = 'latest',
-): Promise<ApiResponse<SocialFeedResponse>> => {
-  return apiFetch(`/social/all?page=${page}&limit=${limit}&sortBy=${sortBy}`);
+  size: number = 20,
+  sort: string = 'latest',
+): Promise<CreationListResponse> => {
+  return apiFetch(`/creations?page=${page}&size=${size}&sort=${sort}`);
 };
 
-// 좋아요한 게시물 목록 조회
-export const fetchLikedPosts = async (
-  page: number = 1,
-  limit: number = 20,
-): Promise<ApiResponse<LikedVideosResponse>> => {
-  return apiFetch(`/social/my-likes?page=${page}&limit=${limit}`);
-};
-
-// 게시물 상세 정보 조회
-export const fetchPostDetail = async (
-  videoId: string,
-): Promise<ApiResponse<Video>> => {
-  return apiFetch(`/social/detail/${videoId}`);
-};
-
-// 좋아요 추가
-export const likePost = async (
-  request: LikeRequest,
-): Promise<ApiResponse<LikeResponse>> => {
-  return apiFetch('/social/like', {
+// 2. 창작물 등록
+export const createCreation = async (
+  request: CreateCreationRequest,
+): Promise<Creation> => {
+  return apiFetch('/creations', {
     method: 'POST',
     data: request,
   });
 };
 
-// 좋아요 취소
-export const unlikePost = async (
-  videoId: string,
-): Promise<ApiResponse<LikeResponse>> => {
-  return apiFetch(`/social/unlike/${videoId}`, {
+// 3. 좋아요 추가 (창작물)
+export const likeCreation = async (
+  creationId: string,
+): Promise<CreationLikeResponse> => {
+  return apiFetch(`/creations/${creationId}/like`, {
+    method: 'POST',
+  });
+};
+
+// 4. 좋아요 취소 (창작물)
+export const unlikeCreation = async (
+  creationId: string,
+): Promise<CreationLikeResponse> => {
+  return apiFetch(`/creations/${creationId}/like`, {
+    method: 'DELETE',
+  });
+};
+
+// 6. 내 창작물 목록 조회
+export const fetchMyCreations = async (
+  page: number = 1,
+  size: number = 20,
+  sort: string = 'latest',
+): Promise<CreationListResponse> => {
+  return apiFetch(`/creations/my?page=${page}&size=${size}&sort=${sort}`);
+};
+
+// 7. 내 창작물 삭제
+export const deleteMyCreation = async (creationId: string): Promise<void> => {
+  return apiFetch(`/creations/my/${creationId}`, {
     method: 'DELETE',
   });
 };

@@ -175,3 +175,32 @@ export interface LikeResponse {
   likeCount: number;
   message: string;
 }
+
+// 창작물(Creation) 관련 타입
+export interface Creation {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  filename: string;
+  likes: number;
+  rankScore: number;
+  createdAt: string;
+}
+
+export interface CreationListResponse {
+  page: number;
+  size: number;
+  items: Creation[];
+}
+
+export interface CreateCreationRequest {
+  title: string;
+  description: string;
+  filename: string;
+}
+
+export interface CreationLikeResponse {
+  liked: boolean;
+  likes: number;
+}
