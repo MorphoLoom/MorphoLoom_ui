@@ -37,6 +37,21 @@ function SocialStack(): React.JSX.Element {
   );
 }
 
+function RankingStack(): React.JSX.Element {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="RankingMain" component={RankingScreen} />
+      <Stack.Screen
+        name="SocialDetail"
+        component={SocialDetailScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function MainTabs(): React.JSX.Element {
   const {isDarkMode, colors} = useTheme();
   const [isTabLoading, setIsTabLoading] = useState(false);
@@ -101,7 +116,7 @@ function MainTabs(): React.JSX.Element {
         />
         <Tab.Screen
           name="Ranking"
-          component={RankingScreen}
+          component={RankingStack}
           options={{
             tabBarLabel: () => null,
             tabBarIcon: ({color, size}) => (

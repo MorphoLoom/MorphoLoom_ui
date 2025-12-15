@@ -7,13 +7,18 @@ import {
   Image,
   Animated,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {COLORS} from '../../constants/colors';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreationRankings} from '../../hooks/useRanking';
 
-const RankingScreen = () => {
+interface RankingScreenProps {
+  navigation?: any;
+}
+
+const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
   const {colors} = useTheme();
   const {data: rankings, isLoading, error} = useCreationRankings();
 
@@ -138,74 +143,82 @@ const RankingScreen = () => {
     }
 
     return (
-      <Animated.View
-        style={[styles.topCircle, positions[rank], animatedStyle]}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => navigation?.navigate('SocialDetail', {item})}
         key={item.id}>
-        {realRank === 1 && (
-          <Ionicons
-            name="trophy"
-            size={20}
-            color="#FFD700"
-            style={styles.crownIcon}
-          />
-        )}
-        <View style={styles.topCircleBadge}>
-          <Text style={styles.topCircleRank}>{realRank}</Text>
-        </View>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{uri: `https://via.placeholder.com/80?text=${item.title}`}}
-            style={styles.topCircleImage}
-          />
-        </View>
-        <Text
-          style={[styles.topCircleTitle, {color: colors.text}]}
-          numberOfLines={1}>
-          {item.title}
-        </Text>
-      </Animated.View>
+        <Animated.View
+          style={[styles.topCircle, positions[rank], animatedStyle]}>
+          {realRank === 1 && (
+            <Ionicons
+              name="trophy"
+              size={20}
+              color="#FFD700"
+              style={styles.crownIcon}
+            />
+          )}
+          <View style={styles.topCircleBadge}>
+            <Text style={styles.topCircleRank}>{realRank}</Text>
+          </View>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{uri: `https://via.placeholder.com/80?text=${item.title}`}}
+              style={styles.topCircleImage}
+            />
+          </View>
+          <Text
+            style={[styles.topCircleTitle, {color: colors.text}]}
+            numberOfLines={1}>
+            {item.title}
+          </Text>
+        </Animated.View>
+      </TouchableOpacity>
     );
   };
 
   const renderItem = ({item, index}: {item: any; index: number}) => (
-    <Animated.View
-      style={[
-        styles.listItem,
-        {
-          backgroundColor: colors.card,
-          opacity: fadeAnim,
-          transform: [{translateY: slideAnim}],
-        },
-      ]}>
-      <View style={styles.rankBadge}>
-        <Text style={styles.rankNumber}>{index + 4}</Text>
-      </View>
-      <Image
-        source={{uri: `https://via.placeholder.com/48?text=${item.title}`}}
-        style={styles.avatar}
-      />
-      <View style={styles.textContainer}>
-        <Text style={[styles.title, {color: colors.text}]} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text
-          style={[styles.description, {color: colors.textSecondary}]}
-          numberOfLines={1}>
-          {item.description}
-        </Text>
-      </View>
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Ionicons name="heart" size={14} color={COLORS.primary} />
-          <Text style={[styles.statText, {color: colors.textSecondary}]}>
-            {item.likes}
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => navigation?.navigate('SocialDetail', {item})}>
+      <Animated.View
+        style={[
+          styles.listItem,
+          {
+            backgroundColor: colors.card,
+            opacity: fadeAnim,
+            transform: [{translateY: slideAnim}],
+          },
+        ]}>
+        <View style={styles.rankBadge}>
+          <Text style={styles.rankNumber}>{index + 4}</Text>
+        </View>
+        <Image
+          source={{uri: `https://via.placeholder.com/48?text=${item.title}`}}
+          style={styles.avatar}
+        />
+        <View style={styles.textContainer}>
+          <Text style={[styles.title, {color: colors.text}]} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text
+            style={[styles.description, {color: colors.textSecondary}]}
+            numberOfLines={1}>
+            {item.description}
           </Text>
         </View>
-        <Text style={[styles.scoreText, {color: colors.text}]}>
-          {item.rankScore.toFixed(0)}
-        </Text>
-      </View>
-    </Animated.View>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Ionicons name="heart" size={14} color={COLORS.primary} />
+            <Text style={[styles.statText, {color: colors.textSecondary}]}>
+              {item.likes}
+            </Text>
+          </View>
+          <Text style={[styles.scoreText, {color: colors.text}]}>
+            {item.rankScore.toFixed(0)}
+          </Text>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
   );
 
   if (isLoading) {
@@ -252,6 +265,20 @@ const RankingScreen = () => {
           numColumns={1}
           key={'list'}
         />
+      ) : rankings && rankings.length > 0 ? (
+        <View style={styles.emptyRestContainer}>
+          <Ionicons
+            name="sparkles-outline"
+            size={48}
+            color={colors.textSecondary}
+          />
+          <Text style={[styles.emptyText, {color: colors.text}]}>
+            더 많은 창작물을 기다리고 있어요!
+          </Text>
+          <Text style={[styles.emptySubText, {color: colors.textSecondary}]}>
+            당신의 멋진 작품으로 랭킹을 채워주세요
+          </Text>
+        </View>
       ) : (
         <View style={styles.emptyRestContainer}>
           <Ionicons
@@ -260,10 +287,10 @@ const RankingScreen = () => {
             color={colors.textSecondary}
           />
           <Text style={[styles.emptyText, {color: colors.text}]}>
-            아직 랭킹이 없습니다
+            첫 번째 창작자가 되어보세요!
           </Text>
           <Text style={[styles.emptySubText, {color: colors.textSecondary}]}>
-            첫 번째로 창작물을 만들어 랭킹에 올라보세요!
+            지금 바로 작품을 만들어 랭킹에 올라보세요
           </Text>
         </View>
       )}

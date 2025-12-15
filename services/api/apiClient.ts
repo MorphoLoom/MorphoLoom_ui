@@ -14,6 +14,21 @@ const apiClient = axios.create({
   },
 });
 
+// 토큰 갱신 중 플래그 (중복 갱신 방지)
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+// 토큰 갱신 후 대기 중인 요청들에게 새 토큰 전달
+const onRefreshed = (token: string) => {
+  refreshSubscribers.map(callback => callback(token));
+  refreshSubscribers = [];
+};
+
+// 토큰 갱신 대기열에 추가
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
 // Request 인터셉터: 모든 요청에 토큰 자동 추가
 apiClient.interceptors.request.use(
   async config => {
@@ -37,15 +52,71 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    const originalRequest: any = error.config;
+
     if (error.response) {
-      // 서버가 응답을 반환한 경우
       const status = error.response.status;
 
-      if (status === 401) {
-        // TODO: 토큰 만료 시 로그아웃 처리
-        // await AsyncStorage.removeItem('token');
-        // NavigationService.navigate('Login');
-        console.log('Unauthorized - 로그인이 필요합니다');
+      // 401 에러: 토큰 만료
+      if (status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          // 이미 토큰 갱신 중이면 대기
+          return new Promise(resolve => {
+            addRefreshSubscriber((token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(apiClient(originalRequest));
+            });
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          // AsyncStorage에서 refreshToken 가져오기
+          const refreshToken = await AsyncStorage.getItem('refreshToken');
+
+          if (!refreshToken) {
+            // refreshToken이 없으면 로그아웃 처리
+            await handleLogout();
+            return Promise.reject(error);
+          }
+
+          // 토큰 갱신 API 호출
+          const response = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            {refreshToken},
+            {
+              headers: {'Content-Type': 'application/json'},
+            },
+          );
+
+          const {accessToken, refreshToken: newRefreshToken} = response.data;
+
+          // 새 토큰 저장
+          await AsyncStorage.setItem('accessToken', accessToken);
+          await AsyncStorage.setItem('refreshToken', newRefreshToken);
+
+          // 헤더 업데이트
+          apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+          // 대기 중인 요청들에게 새 토큰 전달
+          onRefreshed(accessToken);
+
+          isRefreshing = false;
+
+          // 원래 요청 재시도
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          console.error('토큰 갱신 실패:', refreshError);
+          isRefreshing = false;
+          refreshSubscribers = [];
+
+          // 토큰 갱신 실패 시 로그아웃 처리
+          await handleLogout();
+          return Promise.reject(refreshError);
+        }
       } else if (status === 403) {
         console.log('Forbidden - 권한이 없습니다');
       } else if (status === 404) {
@@ -61,6 +132,17 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// 로그아웃 처리 함수
+const handleLogout = async () => {
+  try {
+    await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
+    console.log('로그아웃 처리 완료 - 로그인 화면으로 이동');
+    // AuthContext의 상태가 변경되면 App.tsx에서 자동으로 LoginScreen으로 이동됨
+  } catch (error) {
+    console.error('로그아웃 처리 중 오류:', error);
+  }
+};
 
 // 공통 API 함수
 async function apiFetch<T>(

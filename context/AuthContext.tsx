@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // 앱 시작 시 저장된 토큰 확인
+  // 앱 시작 시 저장된 토큰 확인 및 주기적 검증
   useEffect(() => {
     const loadAuthData = async () => {
       try {
@@ -34,6 +34,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
           setAccessToken(token);
           setUser(JSON.parse(userData));
           setIsLoggedIn(true);
+        } else {
+          // 토큰이 없으면 로그아웃 상태
+          setAccessToken(null);
+          setUser(null);
+          setIsLoggedIn(false);
         }
       } catch (error) {
         console.error('Failed to load auth data:', error);
@@ -41,7 +46,25 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
     };
 
     loadAuthData();
-  }, []);
+
+    // 주기적으로 토큰 존재 여부 확인 (apiClient에서 삭제했을 경우 감지)
+    const interval = setInterval(async () => {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        if (!token && isLoggedIn) {
+          // 토큰이 삭제되었으면 로그아웃 처리
+          setAccessToken(null);
+          setUser(null);
+          setIsLoggedIn(false);
+          console.log('토큰 삭제 감지 - 로그아웃 처리');
+        }
+      } catch (error) {
+        console.error('Failed to check auth status:', error);
+      }
+    }, 1000); // 1초마다 확인
+
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   // 인증 데이터 저장
   const setAuthData = async (

@@ -92,3 +92,13 @@ export const resetPassword = async (
     data: request,
   });
 };
+
+// 토큰 갱신
+export const refreshAccessToken = async (
+  refreshToken: string,
+): Promise<LoginResponse> => {
+  return apiFetch('/auth/refresh', {
+    method: 'POST',
+    data: {refreshToken},
+  });
+};
