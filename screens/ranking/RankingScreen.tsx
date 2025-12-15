@@ -161,10 +161,17 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
             <Text style={styles.topCircleRank}>{realRank}</Text>
           </View>
           <View style={styles.imageContainer}>
-            <Image
-              source={{uri: item.thumbnail}}
-              style={styles.topCircleImage}
-            />
+            {item.thumbnail ? (
+              <Image
+                source={{uri: item.thumbnail}}
+                style={styles.topCircleImage}
+                onError={() => console.log('Image load error:', item.thumbnail)}
+              />
+            ) : (
+              <View style={[styles.topCircleImage, styles.placeholderImage]}>
+                <Ionicons name="images-outline" size={32} color="#999" />
+              </View>
+            )}
           </View>
           <Text
             style={[styles.topCircleTitle, {color: colors.text}]}
@@ -192,10 +199,17 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
         <View style={styles.rankBadge}>
           <Text style={styles.rankNumber}>{index + 4}</Text>
         </View>
-        <Image
-          source={{uri: item.thumbnail}}
-          style={styles.avatar}
-        />
+        {item.thumbnail ? (
+          <Image
+            source={{uri: item.thumbnail}}
+            style={styles.avatar}
+            onError={() => console.log('Image load error:', item.thumbnail)}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.placeholderAvatar]}>
+            <Ionicons name="images-outline" size={24} color="#999" />
+          </View>
+        )}
         <View style={styles.textContainer}>
           <Text style={[styles.title, {color: colors.text}]} numberOfLines={1}>
             {item.title}
@@ -358,6 +372,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.primary,
   },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+  },
   topCircleBadge: {
     position: 'absolute',
     top: -14,
@@ -402,6 +421,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 12,
     backgroundColor: '#E0E0E0',
+  },
+  placeholderAvatar: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
   },
   textContainer: {
     flex: 1,

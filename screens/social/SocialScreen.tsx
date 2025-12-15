@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreations, useMyCreations} from '../../hooks/useSocialPosts';
 import type {Creation} from '../../types/api';
@@ -34,7 +35,17 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
       onPress={() => navigation?.navigate('SocialDetail', {item})}>
-      <Image source={{uri: item.thumbnail}} style={styles.gridImage} />
+      {item.thumbnail ? (
+        <Image
+          source={{uri: item.thumbnail}}
+          style={styles.gridImage}
+          onError={() => console.log('Image load error:', item.thumbnail)}
+        />
+      ) : (
+        <View style={[styles.gridImage, styles.placeholderImage]}>
+          <Ionicons name="images-outline" size={40} color="#999" />
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -91,7 +102,17 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
       onPress={() => navigation?.navigate('SocialDetail', {item})}>
-      <Image source={{uri: item.thumbnail}} style={styles.gridImage} />
+      {item.thumbnail ? (
+        <Image
+          source={{uri: item.thumbnail}}
+          style={styles.gridImage}
+          onError={() => console.log('Image load error:', item.thumbnail)}
+        />
+      ) : (
+        <View style={[styles.gridImage, styles.placeholderImage]}>
+          <Ionicons name="images-outline" size={40} color="#999" />
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -229,6 +250,11 @@ const styles = StyleSheet.create({
     margin: 0,
     padding: 0,
     backgroundColor: '#E0E0E0',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
   },
 });
 
