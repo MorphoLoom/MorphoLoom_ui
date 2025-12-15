@@ -1,4 +1,4 @@
-import React, {useState, useRef, useCallback} from 'react';
+import React, {useState, useRef, useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,12 @@ import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
-import {uploadVideo, uploadImage} from '../../services/api/contentApi';
+import {
+  uploadVideo,
+  uploadImage,
+  saveVideoToGallery,
+  deleteTempVideo,
+} from '../../services/api/contentApi';
 import {
   executeInference,
   getInferenceStatus,
@@ -75,6 +80,16 @@ const HomeScreen: React.FC = () => {
       }
     }, [translateX, nextCardTranslateX]),
   );
+
+  // 컴포넌트 언마운트 시 임시 파일 삭제
+  useEffect(() => {
+    return () => {
+      // unmount 시 임시 파일 삭제 (페이지 벗어날 때)
+      if (resultVideo) {
+        deleteTempVideo(resultVideo);
+      }
+    };
+  }, [resultVideo]);
 
   // 스와이프 제스처 핸들러
   const panResponder = useRef(
@@ -300,7 +315,12 @@ const HomeScreen: React.FC = () => {
     });
   };
 
-  const swipeBackFromResult = () => {
+  const swipeBackFromResult = async () => {
+    // 임시 파일 삭제 ("다시 하기" 클릭 시)
+    if (resultVideo) {
+      await deleteTempVideo(resultVideo);
+    }
+
     // Step 2에서 Step 0으로 완전 초기화
     Animated.parallel([
       Animated.timing(translateX, {
@@ -325,6 +345,19 @@ const HomeScreen: React.FC = () => {
       setUploadedVideoUrl(null);
       setUploadedImageUrl(null);
     });
+  };
+
+  const handleSave = async () => {
+    if (!resultVideo) return;
+
+    const result = await saveVideoToGallery(resultVideo);
+    if (result.success) {
+      showToast.success('저장 완료', result.message);
+      // 갤러리 저장 후 임시 파일 삭제
+      await deleteTempVideo(resultVideo);
+    } else {
+      showToast.error('저장 실패', result.message);
+    }
   };
 
   const handleStart = async () => {
@@ -695,7 +728,7 @@ const HomeScreen: React.FC = () => {
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.saveButton, {backgroundColor: colors.primary}]}
-                onPress={() => console.log('저장하기')}>
+                onPress={handleSave}>
                 <Icon name="save" size={20} color="#FFFFFF" />
                 <Text style={styles.saveButtonText}>저장</Text>
               </TouchableOpacity>

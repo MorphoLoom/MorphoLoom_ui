@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-vector-icons/fontawesome": "^4.7.0-alpha.25",
     "@react-navigation/bottom-tabs": "^6.6.1",
@@ -30,6 +31,7 @@
     "react": "18.3.1",
     "react-native": "0.75.3",
     "react-native-config": "^1.6.1",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.19.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-reanimated": "^3.15.3",
