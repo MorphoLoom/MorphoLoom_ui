@@ -41,21 +41,36 @@ export const useMediaUpload = () => {
       }
 
       try {
+        // 파일명 뒤에 Unix time(초) 추가
+        const unixTime = Math.floor(Date.now() / 1000);
+        const originalFileName = selectedFile.fileName || (type === 'video' ? 'video.mp4' : 'image.png');
+        const lastDotIndex = originalFileName.lastIndexOf('.');
+        const nameWithoutExt = lastDotIndex > 0 ? originalFileName.substring(0, lastDotIndex) : originalFileName;
+        const extension = lastDotIndex > 0 ? originalFileName.substring(lastDotIndex) : (type === 'video' ? '.mp4' : '.png');
+        const newFileName = `${nameWithoutExt}_${unixTime}${extension}`;
+
         const fileData = {
           uri: selectedFile.uri,
           type: selectedFile.type,
-          fileName: selectedFile.fileName,
+          fileName: newFileName,
         };
+
+        console.log('📤 Uploading file:', {
+          type,
+          fileName: newFileName,
+          uri: selectedFile.uri,
+          fileSize: selectedFile.fileSize,
+        });
 
         // API 업로드
         let uploadResponse;
         if (type === 'video') {
           uploadResponse = await uploadVideo(fileData);
-          console.log('Video upload response:', uploadResponse);
+          console.log('✅ Video upload response:', uploadResponse);
           setUploadedVideoUrl(uploadResponse);
         } else {
           uploadResponse = await uploadImage(fileData);
-          console.log('Image upload response:', uploadResponse);
+          console.log('✅ Image upload response:', uploadResponse);
           setUploadedImageUrl(uploadResponse);
         }
 

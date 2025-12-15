@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API 기본 설정 (하드코딩)
 const API_BASE_URL = 'http://10.10.110.29:18080/api/v1';
-const API_TIMEOUT = 30000;
+const API_TIMEOUT = 10000;
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -29,14 +29,35 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
   refreshSubscribers.push(callback);
 };
 
+// 토큰이 필요 없는 엔드포인트 목록
+const PUBLIC_ENDPOINTS = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/send-verification',
+  '/auth/verify-email',
+  '/auth/social-login',
+  '/auth/password-reset/verify',
+];
+
 // Request 인터셉터: 모든 요청에 토큰 자동 추가
 apiClient.interceptors.request.use(
   async config => {
-    // AsyncStorage에서 토큰 가져오기
-    const token = await AsyncStorage.getItem('accessToken');
+    const url = config.url || '';
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 공개 엔드포인트는 토큰 추가하지 않음
+    const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+
+    if (!isPublicEndpoint) {
+      // AsyncStorage에서 토큰 가져오기
+      const token = await AsyncStorage.getItem('accessToken');
+
+      console.log('🔑 Token check:', token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN');
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } else {
+      console.log('🔓 Public endpoint - no token needed:', url);
     }
 
     return config;
@@ -56,9 +77,13 @@ apiClient.interceptors.response.use(
 
     if (error.response) {
       const status = error.response.status;
+      const url = originalRequest.url || '';
 
-      // 401 에러: 토큰 만료
-      if (status === 401 && !originalRequest._retry) {
+      // 공개 엔드포인트는 자동 갱신하지 않음
+      const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+
+      // 401 에러: 토큰 만료 (public endpoint 제외)
+      if (status === 401 && !originalRequest._retry && !isPublicEndpoint) {
         if (isRefreshing) {
           // 이미 토큰 갱신 중이면 대기
           return new Promise(resolve => {

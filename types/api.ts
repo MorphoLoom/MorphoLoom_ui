@@ -183,6 +183,7 @@ export interface Creation {
   title: string;
   description: string;
   filename: string;
+  thumbnail: string;
   likes: number;
   rankScore: number;
   createdAt: string;
@@ -222,7 +223,6 @@ export interface ImageUploadResponse {
 export interface InferenceRequest {
   sourcePath: string;
   drivingPath: string;
-  userId?: number;
 }
 
 export interface InferenceStatusResponse {

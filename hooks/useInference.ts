@@ -44,9 +44,22 @@ export const useInference = () => {
 
       // 2. AI 추론 실행
       console.log('Executing inference...');
+
+      // URL에서 파일명만 추출
+      const extractFileName = (url: string) => {
+        const urlParts = url.split('/');
+        return urlParts[urlParts.length - 1];
+      };
+
+      const sourceFileName = extractFileName(uploadedImageUrl.fileUrl);
+      const drivingFileName = extractFileName(uploadedVideoUrl.fileUrl);
+
+      console.log('Source file name:', sourceFileName);
+      console.log('Driving file name:', drivingFileName);
+
       const inferenceResult = await executeInference({
-        sourcePath: uploadedImageUrl.fileUrl,
-        drivingPath: uploadedVideoUrl.fileUrl,
+        sourcePath: sourceFileName,
+        drivingPath: drivingFileName,
       });
 
       console.log('Inference result:', inferenceResult);

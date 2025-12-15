@@ -6,6 +6,13 @@ import type {VideoUploadResponse, ImageUploadResponse} from '../../types/api';
  * POST /api/v1/content/videos/upload
  */
 export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
+  console.log('🎥 [uploadVideo] Starting video upload...');
+  console.log('📋 [uploadVideo] File info:', {
+    uri: file.uri,
+    type: file.type,
+    fileName: file.fileName,
+  });
+
   const formData = new FormData();
   formData.append('file', {
     uri: file.uri,
@@ -13,14 +20,19 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
     name: file.fileName || 'video.mp4',
   } as any);
 
-  return apiFetch('/content/videos/upload', {
+  console.log('📤 [uploadVideo] Sending request to /content/videos/upload');
+
+  const response = await apiFetch<VideoUploadResponse>('/content/videos/upload', {
     method: 'POST',
     data: formData,
     headers: {
-      'X-User-Id': '1',
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 60000,
   });
+
+  console.log('✅ [uploadVideo] Upload successful:', response);
+  return response;
 };
 
 /**
@@ -28,6 +40,13 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
  * POST /api/v1/content/images/upload
  */
 export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
+  console.log('🖼️ [uploadImage] Starting image upload...');
+  console.log('📋 [uploadImage] File info:', {
+    uri: file.uri,
+    type: file.type,
+    fileName: file.fileName,
+  });
+
   const formData = new FormData();
   formData.append('file', {
     uri: file.uri,
@@ -35,14 +54,19 @@ export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
     name: file.fileName || 'image.png',
   } as any);
 
-  return apiFetch('/content/images/upload', {
+  console.log('📤 [uploadImage] Sending request to /content/images/upload');
+
+  const response = await apiFetch<ImageUploadResponse>('/content/images/upload', {
     method: 'POST',
     data: formData,
     headers: {
-      'X-User-Id': '1',
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 60000,
   });
+
+  console.log('✅ [uploadImage] Upload successful:', response);
+  return response;
 };
 
 /**

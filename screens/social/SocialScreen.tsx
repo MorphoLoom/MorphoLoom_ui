@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
-import {MOCK_SOCIAL_POSTS, MOCK_LIKED_POSTS} from '../../constants/mockData';
+import {useCreations, useMyCreations} from '../../hooks/useSocialPosts';
+import type {Creation} from '../../types/api';
 
 interface SocialScreenProps {
   navigation?: any;
@@ -17,42 +18,33 @@ interface SocialScreenProps {
 
 // 전체 그리드 컴포넌트
 const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCreations('latest');
 
-  useEffect(() => {
-    // TODO: 전체 게시물 API 호출
-    const fetchAllPosts = async () => {
-      try {
-        setLoading(true);
-        // const response = await fetch('YOUR_API_ENDPOINT/posts');
-        // const result = await response.json();
-        // setData(result);
+  // 모든 페이지의 데이터를 평탄화
+  const creations = data?.pages.flatMap(page => page.items) || [];
 
-        // 임시: MOCK_SOCIAL_POSTS 사용
-        setTimeout(() => {
-          setData(MOCK_SOCIAL_POSTS);
-          setLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error('전체 게시물 로드 실패:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchAllPosts();
-  }, []);
-
-  const renderItem = ({item}: {item: any}) => (
+  const renderItem = ({item}: {item: Creation}) => (
     <TouchableOpacity
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
       onPress={() => navigation?.navigate('SocialDetail', {item})}>
-      <Image source={{uri: item.image}} style={styles.gridImage} />
+      <Image source={{uri: item.thumbnail}} style={styles.gridImage} />
     </TouchableOpacity>
   );
 
-  if (loading) {
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#7C4DFF" />
@@ -62,7 +54,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
 
   return (
     <FlatList
-      data={data}
+      data={creations}
       renderItem={renderItem}
       keyExtractor={item => item.id}
       numColumns={3}
@@ -70,48 +62,46 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       columnWrapperStyle={styles.columnWrapper}
       key={'grid'}
       showsVerticalScrollIndicator={false}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#7C4DFF" style={{padding: 20}} />
+        ) : null
+      }
     />
   );
 };
 
-// 좋아요 그리드 컴포넌트
+// 좋아요 그리드 컴포넌트 (내 창작물로 대체)
 const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useMyCreations('latest');
 
-  useEffect(() => {
-    // TODO: 좋아요한 게시물 API 호출
-    const fetchLikedPosts = async () => {
-      try {
-        setLoading(true);
-        // const response = await fetch('YOUR_API_ENDPOINT/posts/liked');
-        // const result = await response.json();
-        // setData(result);
+  // 모든 페이지의 데이터를 평탄화
+  const myCreations = data?.pages.flatMap(page => page.items) || [];
 
-        // 임시: MOCK_LIKED_POSTS 사용
-        setTimeout(() => {
-          setData(MOCK_LIKED_POSTS);
-          setLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error('좋아요 게시물 로드 실패:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchLikedPosts();
-  }, []);
-
-  const renderItem = ({item}: {item: any}) => (
+  const renderItem = ({item}: {item: Creation}) => (
     <TouchableOpacity
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
       onPress={() => navigation?.navigate('SocialDetail', {item})}>
-      <Image source={{uri: item.image}} style={styles.gridImage} />
+      <Image source={{uri: item.thumbnail}} style={styles.gridImage} />
     </TouchableOpacity>
   );
 
-  if (loading) {
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#7C4DFF" />
@@ -121,7 +111,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
 
   return (
     <FlatList
-      data={data}
+      data={myCreations}
       renderItem={renderItem}
       keyExtractor={item => item.id}
       numColumns={3}
@@ -129,6 +119,13 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       columnWrapperStyle={styles.columnWrapper}
       key={'grid-like'}
       showsVerticalScrollIndicator={false}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#7C4DFF" style={{padding: 20}} />
+        ) : null
+      }
     />
   );
 };

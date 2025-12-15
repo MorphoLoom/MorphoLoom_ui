@@ -8,56 +8,48 @@ import {
   Dimensions,
   PanResponder,
   Image,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
-import {launchImageLibrary} from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
 import {
-  uploadVideo,
-  uploadImage,
   saveVideoToGallery,
   deleteTempVideo,
 } from '../../services/api/contentApi';
-import {
-  executeInference,
-  getInferenceStatus,
-} from '../../services/api/inferenceApi';
-import type {
-  VideoUploadResponse,
-  ImageUploadResponse,
-} from '../../types/api';
+import {useMediaUpload} from '../../hooks/useMediaUpload';
+import {useInference} from '../../hooks/useInference';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-interface MediaAsset {
-  uri: string;
-  type: 'video' | 'image';
-}
-
 const HomeScreen: React.FC = () => {
   const {colors} = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
-  const [videoAsset, setVideoAsset] = useState<MediaAsset | null>(null);
-  const [imageAsset, setImageAsset] = useState<MediaAsset | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [resultVideo, setResultVideo] = useState<string | null>(null);
 
-  // 업로드 상태
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  // useMediaUpload hook 사용
+  const {
+    videoAsset,
+    imageAsset,
+    isUploadingVideo,
+    isUploadingImage,
+    uploadedVideoUrl,
+    uploadedImageUrl,
+    handleMediaPick,
+    handleDelete,
+    resetMedia,
+  } = useMediaUpload();
 
-  // 업로드된 파일 URL 저장
-  const [uploadedVideoUrl, setUploadedVideoUrl] =
-    useState<VideoUploadResponse | null>(null);
-  const [uploadedImageUrl, setUploadedImageUrl] =
-    useState<ImageUploadResponse | null>(null);
+  // useInference hook 사용
+  const {
+    isProcessing,
+    resultVideo,
+    handleStart: executeInference,
+    resetResult,
+  } = useInference();
 
   const translateX = useRef(new Animated.Value(0)).current;
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
@@ -189,110 +181,6 @@ const HomeScreen: React.FC = () => {
     });
   };
 
-  const handleMediaPick = async (type: 'video' | 'image') => {
-    const result = await launchImageLibrary({
-      mediaType: type === 'video' ? 'video' : 'photo',
-      quality: 1,
-    });
-
-    if (result.assets && result.assets[0]) {
-      const selectedFile = result.assets[0];
-      console.log('Selected asset:', selectedFile);
-
-      // 업로드 로딩 시작
-      if (type === 'video') {
-        setIsUploadingVideo(true);
-      } else {
-        setIsUploadingImage(true);
-      }
-
-      try {
-        const fileData = {
-          uri: selectedFile.uri,
-          type: selectedFile.type,
-          fileName: selectedFile.fileName,
-        };
-
-        // API 업로드
-        let uploadResponse;
-        if (type === 'video') {
-          uploadResponse = await uploadVideo(fileData);
-          console.log('Video upload response:', uploadResponse);
-          setUploadedVideoUrl(uploadResponse);
-        } else {
-          uploadResponse = await uploadImage(fileData);
-          console.log('Image upload response:', uploadResponse);
-          setUploadedImageUrl(uploadResponse);
-        }
-
-        // 업로드 성공 후 로컬 상태 업데이트 (미리보기 표시)
-        const asset: MediaAsset = {
-          uri: selectedFile.uri || '',
-          type,
-        };
-
-        if (type === 'video') {
-          setVideoAsset(asset);
-          setIsUploadingVideo(false);
-        } else {
-          setImageAsset(asset);
-          setIsUploadingImage(false);
-        }
-
-        // 성공 토스트 표시
-        showToast.success(
-          '업로드 완료',
-          `${type === 'video' ? '비디오' : '이미지'}가 업로드되었습니다`,
-          {duration: 3000},
-        );
-      } catch (error) {
-        console.error('Upload failed:', error);
-
-        // 로딩 종료
-        if (type === 'video') {
-          setIsUploadingVideo(false);
-        } else {
-          setIsUploadingImage(false);
-        }
-
-        showToast.error(
-          '업로드 실패',
-          `${type === 'video' ? '비디오' : '이미지'} 업로드에 실패했습니다`,
-          {duration: 3000},
-        );
-      }
-    }
-  };
-
-  const handleDelete = (type: 'video' | 'image') => {
-    Alert.alert(
-      '삭제 확인',
-      `${type === 'video' ? '비디오' : '이미지'}를 삭제하시겠습니까?`,
-      [
-        {
-          text: '취소',
-          style: 'cancel',
-        },
-        {
-          text: '확인',
-          onPress: () => {
-            if (type === 'video') {
-              setVideoAsset(null);
-            } else {
-              setImageAsset(null);
-            }
-
-            // 삭제 토스트 표시
-            showToast.info(
-              '삭제 완료',
-              `${type === 'video' ? '비디오' : '이미지'}가 삭제되었습니다`,
-            );
-          },
-          style: 'destructive',
-        },
-      ],
-    );
-  };
 
   const swipeToResult = () => {
     // Step 1에서 Step 2로 이동
@@ -339,11 +227,8 @@ const HomeScreen: React.FC = () => {
       setCurrentStep(0);
       translateX.setValue(0);
       nextCardTranslateX.setValue(width);
-      setResultVideo(null);
-      setVideoAsset(null);
-      setImageAsset(null);
-      setUploadedVideoUrl(null);
-      setUploadedImageUrl(null);
+      resetResult(); // useInference hook의 resetResult 사용
+      resetMedia(); // useMediaUpload hook의 resetMedia 사용
     });
   };
 
@@ -366,104 +251,44 @@ const HomeScreen: React.FC = () => {
       return;
     }
 
-    if (!uploadedVideoUrl || !uploadedImageUrl) {
-      showToast.error(
-        '업로드 오류',
-        '파일 업로드가 완료되지 않았습니다',
-        {duration: 3000},
-      );
-      return;
-    }
+    // useInference hook의 handleStart 호출
+    await executeInference(uploadedVideoUrl, uploadedImageUrl, () => {
+      // 성공 시 콜백: 결과 카드로 자동 이동 및 애니메이션
+      swipeToResult();
 
-    setIsProcessing(true);
-
-    try {
-      // 1. 추론 서비스 상태 확인
-      console.log('Checking inference service status...');
-      const statusResult = await getInferenceStatus();
-      console.log('Inference status:', statusResult);
-
-      if (!statusResult.success) {
-        setIsProcessing(false);
-        Alert.alert(
-          '서비스 사용 불가',
-          '추론 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.',
-          [{text: '확인'}],
-        );
-        return;
-      }
-
-      // 2. AI 추론 실행
-      console.log('Executing inference...');
-      const inferenceResult = await executeInference({
-        sourcePath: uploadedImageUrl.fileUrl,
-        drivingPath: uploadedVideoUrl.fileUrl,
+      // 글로우 + 펄스 애니메이션 시작
+      Animated.sequence([
+        // 1. 글로우 페이드인
+        Animated.timing(glowOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        // 2. 펄스 효과 (1번 반복)
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseScale, {
+              toValue: 1.05,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseScale, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]),
+          {iterations: 1},
+        ),
+      ]).start(() => {
+        // 애니메이션 종료 후 글로우 페이드아웃
+        Animated.timing(glowOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
       });
-
-      console.log('Inference result:', inferenceResult);
-
-      setIsProcessing(false);
-
-      if (inferenceResult.success && inferenceResult.resultVideoPath) {
-        setResultVideo(inferenceResult.resultVideoPath);
-
-        // 결과 카드로 자동 이동
-        swipeToResult();
-
-        // 글로우 + 펄스 애니메이션 시작
-        Animated.sequence([
-          // 1. 글로우 페이드인
-          Animated.timing(glowOpacity, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          // 2. 펄스 효과 (1번 반복)
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(pulseScale, {
-                toValue: 1.05,
-                duration: 400,
-                useNativeDriver: true,
-              }),
-              Animated.timing(pulseScale, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver: true,
-              }),
-            ]),
-            {iterations: 1},
-          ),
-        ]).start(() => {
-          // 애니메이션 종료 후 글로우 페이드아웃
-          Animated.timing(glowOpacity, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }).start();
-        });
-
-        showToast.success(
-          '합성 완료',
-          '영상 합성이 완료되었습니다',
-          {duration: 2000},
-        );
-      } else {
-        showToast.error(
-          '합성 실패',
-          inferenceResult.error || '영상 합성에 실패했습니다',
-          {duration: 3000},
-        );
-      }
-    } catch (error) {
-      console.error('Inference failed:', error);
-      setIsProcessing(false);
-      showToast.error(
-        '합성 실패',
-        '영상 합성 중 오류가 발생했습니다',
-        {duration: 3000},
-      );
-    }
+    });
   };
 
   return (

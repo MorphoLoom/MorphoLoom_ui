@@ -162,7 +162,7 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
           </View>
           <View style={styles.imageContainer}>
             <Image
-              source={{uri: `https://via.placeholder.com/80?text=${item.title}`}}
+              source={{uri: item.thumbnail}}
               style={styles.topCircleImage}
             />
           </View>
@@ -193,7 +193,7 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
           <Text style={styles.rankNumber}>{index + 4}</Text>
         </View>
         <Image
-          source={{uri: `https://via.placeholder.com/48?text=${item.title}`}}
+          source={{uri: item.thumbnail}}
           style={styles.avatar}
         />
         <View style={styles.textContainer}>
