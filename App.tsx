@@ -11,7 +11,6 @@ import {
   LoginScreen,
   HomeScreen,
   RankingScreen,
-  AlarmScreen,
   SocialScreen,
   SocialDetailScreen,
   SettingScreen,
@@ -121,17 +120,6 @@ function MainTabs(): React.JSX.Element {
             tabBarLabel: () => null,
             tabBarIcon: ({color, size}) => (
               <Icon name="star-outline" color={color} size={size} />
-            ),
-            headerShown: false,
-          }}
-        />
-        <Tab.Screen
-          name="Alarm"
-          component={AlarmScreen}
-          options={{
-            tabBarLabel: () => null,
-            tabBarIcon: ({color, size}) => (
-              <Icon name="notifications-outline" color={color} size={size} />
             ),
             headerShown: false,
           }}

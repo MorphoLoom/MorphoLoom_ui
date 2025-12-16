@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Video from 'react-native-video';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreationDetail} from '../../hooks/useCreationDetail';
 import {useCreationLike} from '../../hooks/useCreationLike';
+import {useCreationDelete} from '../../hooks/useCreationDelete';
 
 interface SocialDetailScreenProps {
   route: {
@@ -19,6 +21,7 @@ interface SocialDetailScreenProps {
       item: {
         id: string;
       };
+      isMyCreation?: boolean;
     };
   };
   navigation: any;
@@ -29,7 +32,7 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   navigation,
 }) => {
   const {colors} = useTheme();
-  const {item} = route.params;
+  const {item, isMyCreation = false} = route.params;
   const videoRef = useRef<any>(null);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -39,6 +42,7 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   // 창작물 상세 조회
   const {data: creation, isLoading, error} = useCreationDetail(item.id);
   const {like, unlike, isLiking, isUnliking} = useCreationLike(item.id);
+  const {deleteCreation, isDeleting} = useCreationDelete();
 
   // 초기 좋아요 상태 설정
   useEffect(() => {
@@ -119,6 +123,31 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
     }
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      '창작물 삭제',
+      '이 창작물을 삭제하시겠습니까?',
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: () => {
+            deleteCreation(item.id, {
+              onSuccess: () => {
+                navigation.goBack();
+              },
+            });
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContainer, {backgroundColor: colors.background}]}>
@@ -161,7 +190,21 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
           numberOfLines={1}>
           {creation.title}
         </Text>
-        <View style={styles.headerRightSpace} />
+        {isMyCreation ? (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDelete}
+            activeOpacity={0.7}
+            disabled={isDeleting}>
+            {isDeleting ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <Ionicons name="trash-outline" size={24} color={colors.error} />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerRightSpace} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -278,6 +321,12 @@ const styles = StyleSheet.create({
   },
   headerRightSpace: {
     width: 40,
+  },
+  deleteButton: {
+    padding: 4,
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     paddingBottom: 30,

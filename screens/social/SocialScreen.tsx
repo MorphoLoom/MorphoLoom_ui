@@ -84,7 +84,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   );
 };
 
-// 좋아요 그리드 컴포넌트 (내 창작물로 대체)
+// 내 창작물 그리드 컴포넌트
 const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   const {
     data,
@@ -101,7 +101,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
     <TouchableOpacity
       style={styles.gridImageWrapper}
       activeOpacity={0.8}
-      onPress={() => navigation?.navigate('SocialDetail', {item})}>
+      onPress={() => navigation?.navigate('SocialDetail', {item, isMyCreation: true})}>
       {item.thumbnail ? (
         <Image
           source={{uri: item.thumbnail}}
@@ -153,7 +153,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
 
 const SocialScreen: React.FC<SocialScreenProps> = ({navigation}) => {
   const {colors} = useTheme();
-  const [activeTab, setActiveTab] = useState<'all' | 'like'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'my'>('all');
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
@@ -171,14 +171,14 @@ const SocialScreen: React.FC<SocialScreenProps> = ({navigation}) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'like' && styles.activeTab]}
-          onPress={() => setActiveTab('like')}>
+          style={[styles.tabButton, activeTab === 'my' && styles.activeTab]}
+          onPress={() => setActiveTab('my')}>
           <Text
             style={[
               styles.tabText,
-              activeTab === 'like' && styles.activeTabText,
+              activeTab === 'my' && styles.activeTabText,
             ]}>
-            좋아요
+            내 창작물
           </Text>
         </TouchableOpacity>
       </View>
