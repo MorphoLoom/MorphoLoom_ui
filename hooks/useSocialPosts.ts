@@ -99,6 +99,7 @@ export const useDeleteMyCreation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['creations', 'all']});
       queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
       queryClient.invalidateQueries({queryKey: ['creations', 'ranking']});
     },
   });

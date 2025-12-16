@@ -9,6 +9,7 @@ import {
   PanResponder,
   Image,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -19,6 +20,7 @@ import {showToast} from '../../utils/toast';
 import {deleteTempVideo} from '../../services/api/contentApi';
 import {useMediaUpload} from '../../hooks/useMediaUpload';
 import {useInference} from '../../hooks/useInference';
+import {useCreateCreation} from '../../hooks/useSocialPosts';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -47,6 +49,14 @@ const HomeScreen: React.FC = () => {
     handleStart: executeInference,
     resetResult,
   } = useInference();
+
+  // 창작물 등록 hook
+  const {mutate: createCreation, isPending: isRegistering} = useCreateCreation();
+
+  // 등록 폼 상태
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [filename, setFilename] = useState('');
 
   const translateX = useRef(new Animated.Value(0)).current;
   const nextCardTranslateX = useRef(new Animated.Value(width)).current;
@@ -97,7 +107,7 @@ const HomeScreen: React.FC = () => {
       onPanResponderMove: (_, gestureState) => {
         const step = currentStepRef.current;
         // 왼쪽 스와이프 (다음 카드로)
-        if (gestureState.dx < 0 && step < 2) {
+        if (gestureState.dx < 0 && step < 3) {
           translateX.setValue(gestureState.dx);
           nextCardTranslateX.setValue(width + gestureState.dx);
         }
@@ -114,12 +124,16 @@ const HomeScreen: React.FC = () => {
           swipeToNext();
         } else if (gestureState.dx < -100 && step === 1 && resultVideo) {
           swipeToResult();
+        } else if (gestureState.dx < -100 && step === 2) {
+          swipeToRegister();
         }
         // 오른쪽 스와이프 - 이전 카드로
         else if (gestureState.dx > 100 && step === 1) {
           swipeToPrev();
         } else if (gestureState.dx > 100 && step === 2) {
           swipeBackFromResult();
+        } else if (gestureState.dx > 100 && step === 3) {
+          swipeBackFromRegister();
         }
         // 원위치
         else {
@@ -200,6 +214,18 @@ const HomeScreen: React.FC = () => {
     });
   };
 
+  // URL에서 파일명 추출 함수
+  const extractFilename = (url: string): string => {
+    try {
+      const parts = url.split('/');
+      const filename = parts[parts.length - 1];
+      return decodeURIComponent(filename);
+    } catch (error) {
+      console.error('Failed to extract filename:', error);
+      return 'video.mp4';
+    }
+  };
+
   const swipeBackFromResult = async () => {
     // 임시 파일 삭제 ("다시 하기" 클릭 시)
     if (resultVideo) {
@@ -226,14 +252,100 @@ const HomeScreen: React.FC = () => {
       nextCardTranslateX.setValue(width);
       resetResult(); // useInference hook의 resetResult 사용
       resetMedia(); // useMediaUpload hook의 resetMedia 사용
+      // 등록 폼 초기화
+      setTitle('');
+      setDescription('');
+      setFilename('');
     });
   };
 
-  const handleSave = async () => {
+  // Step 2에서 Step 3(등록 폼)으로 이동
+  const swipeToRegister = () => {
     if (!resultVideo) return;
 
-    // TODO: 저장 기능 구현 필요 (서버 URL → 다운로드 → 갤러리 저장)
-    showToast.info('준비 중', '저장 기능은 곧 추가될 예정입니다');
+    // 파일명 추출
+    const extractedFilename = extractFilename(resultVideo);
+    setFilename(extractedFilename);
+
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -width,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(nextCardTranslateX, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      currentStepRef.current = 3;
+      setCurrentStep(3);
+      translateX.setValue(0);
+      nextCardTranslateX.setValue(width);
+    });
+  };
+
+  // Step 3에서 Step 2로 돌아가기
+  const swipeBackFromRegister = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: width,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(nextCardTranslateX, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      currentStepRef.current = 2;
+      setCurrentStep(2);
+      translateX.setValue(0);
+      nextCardTranslateX.setValue(-width);
+      // 등록 폼 입력값 초기화
+      setTitle('');
+      setDescription('');
+    });
+  };
+
+  // 등록 처리
+  const handleRegister = async () => {
+    if (!title.trim() || !filename) return;
+
+    createCreation(
+      {
+        title: title.trim(),
+        description: description.trim(),
+        filename: filename,
+      },
+      {
+        onSuccess: async () => {
+          showToast.success('등록 완료', '창작물이 성공적으로 등록되었습니다');
+
+          // 임시 파일 삭제
+          if (resultVideo) {
+            await deleteTempVideo(resultVideo);
+          }
+
+          // 완전 초기화
+          currentStepRef.current = 0;
+          setCurrentStep(0);
+          translateX.setValue(0);
+          nextCardTranslateX.setValue(width);
+          resetResult();
+          resetMedia();
+          setTitle('');
+          setDescription('');
+          setFilename('');
+        },
+        onError: (error) => {
+          console.error('Registration error:', error);
+          showToast.error('등록 실패', '창작물 등록에 실패했습니다');
+        },
+      },
+    );
   };
 
   const handleStart = async () => {
@@ -544,9 +656,9 @@ const HomeScreen: React.FC = () => {
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.saveButton, {backgroundColor: colors.primary}]}
-                onPress={handleSave}>
+                onPress={swipeToRegister}>
                 <Icon name="save" size={20} color="#FFFFFF" />
-                <Text style={styles.saveButtonText}>저장</Text>
+                <Text style={styles.saveButtonText}>등록</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -562,10 +674,121 @@ const HomeScreen: React.FC = () => {
                 <View style={[styles.dot, {backgroundColor: colors.border}]} />
                 <View style={[styles.dot, {backgroundColor: colors.border}]} />
                 <View style={[styles.dot, {backgroundColor: colors.primary}]} />
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
               </View>
             </View>
           </Animated.View>
           </>
+        )}
+
+        {/* 등록 폼 카드 (Step 3) */}
+        {currentStep === 3 && (
+          <Animated.View
+            style={[
+              styles.card,
+              styles.absoluteCard,
+              {
+                backgroundColor: colors.card,
+                zIndex: 102,
+                transform: [{translateX: translateX}],
+              },
+            ]}>
+            <View style={styles.registerForm}>
+              {/* 제목 입력 */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, {color: colors.text}]}>
+                  제목 <Text style={{color: colors.error}}>*</Text>
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  placeholder="창작물의 제목을 입력하세요"
+                  placeholderTextColor={colors.textSecondary}
+                  value={title}
+                  onChangeText={setTitle}
+                  editable={!isRegistering}
+                  maxLength={50}
+                />
+              </View>
+
+              {/* 설명 입력 */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, {color: colors.text}]}>설명</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    {
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  placeholder="창작물에 대한 설명을 입력하세요 (선택사항)"
+                  placeholderTextColor={colors.textSecondary}
+                  value={description}
+                  onChangeText={setDescription}
+                  editable={!isRegistering}
+                  multiline
+                  numberOfLines={4}
+                  maxLength={200}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* 버튼 */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.retryButton,
+                    {backgroundColor: '#FFFFFF', borderColor: colors.border},
+                  ]}
+                  onPress={swipeBackFromRegister}
+                  disabled={isRegistering}>
+                  <Icon name="close" size={20} color={colors.text} />
+                  <Text style={[styles.retryButtonText, {color: colors.text}]}>
+                    취소
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.saveButton,
+                    {
+                      backgroundColor: title.trim()
+                        ? colors.primary
+                        : colors.border,
+                    },
+                  ]}
+                  onPress={handleRegister}
+                  disabled={!title.trim() || isRegistering}>
+                  {isRegistering ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Icon name="check" size={20} color="#FFFFFF" />
+                      <Text style={styles.saveButtonText}>등록</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.bottomIndicator}>
+              <View style={styles.stepIndicator}>
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <View style={[styles.dot, {backgroundColor: colors.primary}]} />
+              </View>
+            </View>
+          </Animated.View>
         )}
       </View>
     </View>
@@ -807,6 +1030,31 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  // 등록 폼 스타일
+  registerForm: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+  },
+  textArea: {
+    height: 100,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
 });
 

@@ -8,8 +8,11 @@ export const useCreationDelete = () => {
   const deleteMutation = useMutation({
     mutationFn: (creationId: string) => deleteMyCreation(creationId),
     onSuccess: () => {
-      // 내 창작물 목록 캐시 무효화
-      queryClient.invalidateQueries({queryKey: ['myCreations']});
+      // 모든 관련 캐시 무효화
+      queryClient.invalidateQueries({queryKey: ['creations', 'all']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
+      queryClient.invalidateQueries({queryKey: ['creations', 'ranking']});
       showToast.success('삭제 완료', '창작물이 삭제되었습니다');
     },
     onError: error => {
