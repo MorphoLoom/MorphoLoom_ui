@@ -1,14 +1,21 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {API_BASE_URL, API_TIMEOUT, ENVIRONMENT} from '@env';
 
-// API 기본 설정 (하드코딩)
-const API_BASE_URL = 'http://10.10.110.29:18080/api/v1';
-const API_TIMEOUT = 10000;
+// API 기본 설정 (환경변수에서 로드)
+const BASE_URL = API_BASE_URL;
+const TIMEOUT = parseInt(API_TIMEOUT || '10000', 10);
+
+console.log('🌐 API Configuration:', {
+  baseURL: BASE_URL,
+  timeout: TIMEOUT,
+  environment: ENVIRONMENT,
+});
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: API_TIMEOUT,
+  baseURL: BASE_URL,
+  timeout: TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
