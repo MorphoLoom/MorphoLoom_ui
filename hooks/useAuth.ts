@@ -8,6 +8,7 @@ import {
   socialLogin,
   logout,
   resetPassword,
+  deleteAccount,
 } from '../services/api';
 import type {
   SendVerificationRequest,
@@ -16,6 +17,7 @@ import type {
   LoginRequest,
   SocialLoginRequest,
   ResetPasswordRequest,
+  DeleteAccountRequest,
 } from '../types/api';
 
 // 이메일 인증 코드 발송 mutation
@@ -132,6 +134,20 @@ export const useResetPassword = () => {
     mutationFn: (request: ResetPasswordRequest) => resetPassword(request),
     onSuccess: data => {
       console.log('Password reset success:', data.message);
+    },
+  });
+};
+
+// 계정 삭제 mutation
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: DeleteAccountRequest) => deleteAccount(request),
+    onSuccess: data => {
+      console.log('Account deleted:', data.message);
+      // 모든 캐시 삭제
+      queryClient.clear();
     },
   });
 };

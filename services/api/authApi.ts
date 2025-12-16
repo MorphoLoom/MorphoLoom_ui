@@ -12,6 +12,8 @@ import type {
   SocialLoginResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  DeleteAccountRequest,
+  DeleteAccountResponse,
 } from '../../types/api';
 
 // 이메일 인증 코드 발송
@@ -100,5 +102,15 @@ export const refreshAccessToken = async (
   return apiFetch('/auth/refresh', {
     method: 'POST',
     data: {refreshToken},
+  });
+};
+
+// 계정 삭제
+export const deleteAccount = async (
+  request: DeleteAccountRequest,
+): Promise<DeleteAccountResponse> => {
+  return apiFetch('/auth/delete-account', {
+    method: 'POST',
+    data: request,
   });
 };

@@ -10,14 +10,16 @@ import {
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import {useAuth} from '../../context/AuthContext';
+import {useDeleteAccount} from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
 import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DeleteAccountScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const {colors} = useTheme();
-  const {user} = useAuth();
+  const {user, clearAuth} = useAuth();
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const deleteAccountMutation = useDeleteAccount();
 
   const handleDeleteAccount = async () => {
     if (!password.trim()) {
@@ -25,19 +27,27 @@ const DeleteAccountScreen: React.FC<{navigation: any}> = ({navigation}) => {
       return;
     }
 
-    setIsLoading(true);
+    if (!user?.email) {
+      showToast.error('오류', '사용자 정보를 찾을 수 없습니다');
+      return;
+    }
+
     try {
-      // TODO: API 호출 구현
-      // await deleteAccountApi(user.email, password);
+      await deleteAccountMutation.mutateAsync({
+        email: user.email,
+        password: password,
+      });
 
-      // 임시 딜레이
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 로컬 데이터 삭제
+      await AsyncStorage.clear();
+      await clearAuth();
 
-      showToast.error('회원탈퇴', '회원탈퇴 기능은 준비중입니다');
-    } catch (error) {
-      showToast.error('탈퇴 실패', '다시 시도해주세요');
-    } finally {
-      setIsLoading(false);
+      showToast.success('탈퇴 완료', '계정이 성공적으로 삭제되었습니다');
+
+      // 로그인 화면으로 이동 (네비게이션은 AuthContext에서 자동 처리됨)
+    } catch (error: any) {
+      const errorMessage = error?.message || '다시 시도해주세요';
+      showToast.error('탈퇴 실패', errorMessage);
     }
   };
 
@@ -117,11 +127,11 @@ const DeleteAccountScreen: React.FC<{navigation: any}> = ({navigation}) => {
           style={[
             styles.deleteButton,
             {backgroundColor: colors.error},
-            (!password.trim() || isLoading) && styles.disabledButton,
+            (!password.trim() || deleteAccountMutation.isPending) && styles.disabledButton,
           ]}
           onPress={handleDeleteAccount}
-          disabled={!password.trim() || isLoading}>
-          {isLoading ? (
+          disabled={!password.trim() || deleteAccountMutation.isPending}>
+          {deleteAccountMutation.isPending ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.deleteButtonText}>계정 탈퇴하기</Text>

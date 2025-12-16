@@ -145,6 +145,16 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
+export interface DeleteAccountRequest {
+  email: string;
+  password: string;
+}
+
+export interface DeleteAccountResponse {
+  success: boolean;
+  message: string;
+}
+
 // 사용자 프로필 설정
 export interface UserSettings {
   isDarkMode: boolean;
