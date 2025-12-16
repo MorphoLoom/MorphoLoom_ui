@@ -6,7 +6,7 @@ import {useLogout} from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const SettingScreen: React.FC = () => {
+const SettingScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const {colors} = useTheme();
   const {clearAuth, user} = useAuth();
   const logoutMutation = useLogout();
@@ -33,25 +33,59 @@ const SettingScreen: React.FC = () => {
     }
   };
 
+  const handleProfileSettings = () => {
+    showToast.info('프로필 설정', '프로필 설정 기능은 준비중입니다');
+  };
+
+  const handleDeleteAccount = () => {
+    navigation.navigate('DeleteAccount');
+  };
+
   return (
     <View
       style={[styles.container, {backgroundColor: colors.background}]}>
       <View style={styles.content}>
         <Text style={[styles.title, {color: colors.text}]}>설정</Text>
 
-        {/* 사용자 정보 표시 */}
+        {/* 사용자 프로필 카드 */}
         {user && (
-          <View style={[styles.userInfo, {backgroundColor: colors.card}]}>
-            <Text style={[styles.label, {color: colors.textSecondary}]}>
-              로그인 계정:
-            </Text>
-            <Text style={[styles.email, {color: colors.text}]}>
-              {user.email}
-            </Text>
-            <Text style={[styles.username, {color: colors.text}]}>
-              {user.username}
-            </Text>
-          </View>
+          <>
+            <View style={[styles.profileCard, {backgroundColor: colors.card}]}>
+              {/* 아바타 + 닉네임 */}
+              <View style={styles.profileHeader}>
+                <View style={[styles.avatar, {backgroundColor: colors.primary}]}>
+                  <Text style={styles.avatarText}>
+                    {user.username?.charAt(0).toUpperCase() || 'U'}
+                  </Text>
+                </View>
+                <View style={styles.userInfo}>
+                  <Text style={[styles.username, {color: colors.text}]}>
+                    {user.username}
+                  </Text>
+                  <Text style={[styles.email, {color: colors.textSecondary}]}>
+                    {user.email}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 버튼 영역 */}
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[styles.actionButton, {backgroundColor: colors.primary}]}
+                onPress={handleProfileSettings}>
+                <Text style={styles.actionButtonText}>프로필 설정</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deleteButton, {borderColor: colors.error}]}
+                onPress={handleDeleteAccount}>
+                <Text style={[styles.deleteButtonText, {color: colors.error}]}>
+                  회원탈퇴
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </View>
 
@@ -87,22 +121,68 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 30,
   },
-  userInfo: {
-    padding: 16,
-    borderRadius: 12,
+  profileCard: {
+    padding: 24,
+    borderRadius: 16,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  label: {
-    fontSize: 14,
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 20,
+    fontWeight: '700',
     marginBottom: 4,
   },
   email: {
+    fontSize: 14,
+  },
+  buttonGroup: {
+    gap: 12,
+  },
+  actionButton: {
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
-  username: {
-    fontSize: 14,
-    marginTop: 4,
+  deleteButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   logoutContainer: {
     padding: 20,

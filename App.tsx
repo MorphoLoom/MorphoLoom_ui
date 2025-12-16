@@ -14,6 +14,7 @@ import {
   SocialScreen,
   SocialDetailScreen,
   SettingScreen,
+  DeleteAccountScreen,
 } from './screens';
 import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
 import {QueryProvider} from './context/QueryProvider';
@@ -43,6 +44,21 @@ function RankingStack(): React.JSX.Element {
       <Stack.Screen
         name="SocialDetail"
         component={SocialDetailScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function SettingStack(): React.JSX.Element {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="SettingMain" component={SettingScreen} />
+      <Stack.Screen
+        name="DeleteAccount"
+        component={DeleteAccountScreen}
         options={{
           animation: 'slide_from_right',
         }}
@@ -137,7 +153,7 @@ function MainTabs(): React.JSX.Element {
         />
         <Tab.Screen
           name="Setting"
-          component={SettingScreen}
+          component={SettingStack}
           options={{
             tabBarLabel: () => null,
             tabBarIcon: ({color, size}) => (
