@@ -68,3 +68,12 @@ export const fetchCreationDetail = async (
 ): Promise<CreationDetailResponse> => {
   return apiFetch(`/creations/${creationId}`);
 };
+
+// 9. 좋아요한 창작물 목록 조회
+export const fetchLikedCreations = async (
+  page: number = 1,
+  size: number = 20,
+  sort: string = 'latest',
+): Promise<CreationListResponse> => {
+  return apiFetch(`/creations/my/liked?page=${page}&size=${size}&sort=${sort}`);
+};

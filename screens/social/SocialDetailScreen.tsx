@@ -15,19 +15,7 @@ import {useCreationDetail} from '../../hooks/useCreationDetail';
 import {useCreationLike} from '../../hooks/useCreationLike';
 import {useCreationDelete} from '../../hooks/useCreationDelete';
 
-interface SocialDetailScreenProps {
-  route: {
-    params: {
-      item: {
-        id: string;
-      };
-      isMyCreation?: boolean;
-    };
-  };
-  navigation: any;
-}
-
-const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
+const SocialDetailScreen: React.FC<any> = ({
   route,
   navigation,
 }) => {

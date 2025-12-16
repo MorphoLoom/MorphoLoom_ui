@@ -41,6 +41,10 @@ const SettingScreen: React.FC<{navigation: any}> = ({navigation}) => {
     navigation.navigate('DeleteAccount');
   };
 
+  const handleLikedCreations = () => {
+    navigation.navigate('LikedCreations');
+  };
+
   return (
     <View
       style={[styles.container, {backgroundColor: colors.background}]}>
@@ -75,6 +79,12 @@ const SettingScreen: React.FC<{navigation: any}> = ({navigation}) => {
                 style={[styles.actionButton, {backgroundColor: colors.primary}]}
                 onPress={handleProfileSettings}>
                 <Text style={styles.actionButtonText}>프로필 설정</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, {backgroundColor: colors.primary}]}
+                onPress={handleLikedCreations}>
+                <Text style={styles.actionButtonText}>좋아요한 창작물</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

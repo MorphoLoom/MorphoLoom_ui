@@ -13,6 +13,8 @@ export const useCreationLike = (creationId: string) => {
       queryClient.invalidateQueries({queryKey: ['creations', 'all']});
       // 내 창작물 목록 캐시 무효화 (queryKey: ['creations', 'my', sort])
       queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      // 좋아요한 창작물 목록 캐시 무효화 (queryKey: ['creations', 'liked', sort])
+      queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
     },
     onError: error => {
       console.error('Like error:', error);
@@ -28,6 +30,8 @@ export const useCreationLike = (creationId: string) => {
       queryClient.invalidateQueries({queryKey: ['creations', 'all']});
       // 내 창작물 목록 캐시 무효화 (queryKey: ['creations', 'my', sort])
       queryClient.invalidateQueries({queryKey: ['creations', 'my']});
+      // 좋아요한 창작물 목록 캐시 무효화 (queryKey: ['creations', 'liked', sort])
+      queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
     },
     onError: error => {
       console.error('Unlike error:', error);

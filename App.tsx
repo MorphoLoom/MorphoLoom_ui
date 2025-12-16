@@ -15,6 +15,7 @@ import {
   SocialDetailScreen,
   SettingScreen,
   DeleteAccountScreen,
+  LikedCreationsScreen,
 } from './screens';
 import {ThemeProvider, useTheme, AuthProvider, useAuth} from './context';
 import {QueryProvider} from './context/QueryProvider';
@@ -59,6 +60,20 @@ function SettingStack(): React.JSX.Element {
       <Stack.Screen
         name="DeleteAccount"
         component={DeleteAccountScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="LikedCreations"
+        component={LikedCreationsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="SocialDetail"
+        component={SocialDetailScreen}
         options={{
           animation: 'slide_from_right',
         }}
@@ -114,6 +129,7 @@ function MainTabs(): React.JSX.Element {
           },
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,
+          unmountOnBlur: true,
         }}
         screenListeners={{
           tabPress: handleTabPress,
