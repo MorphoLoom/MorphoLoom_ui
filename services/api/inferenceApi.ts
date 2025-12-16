@@ -1,5 +1,4 @@
 import {apiClient} from './apiClient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
   InferenceRequest,
   InferenceStatusResponse,
@@ -25,69 +24,40 @@ export const executeInference = async (
   };
 
   try {
-    // RNFS가 설치되어 있는지 확인
-    const RNFS = require('react-native-fs');
-
-    // AsyncStorage에서 토큰 가져오기
-    const token = await AsyncStorage.getItem('accessToken');
-
-    // 임시 저장 경로 생성
-    const timestamp = Date.now();
-    const fileName = `result_${timestamp}.mp4`;
-    const downloadDest = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
     console.log('🎬 Starting inference...');
-    console.log('📍 Download destination:', downloadDest);
-    console.log('🔑 Inference token check:', token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN');
     console.log('📦 Request body:', requestBody);
 
-    // 헤더 구성
-    const headers: any = {
-      'Content-Type': 'application/json',
+    // POST 요청으로 추론 실행 (JSON 응답 받기)
+    const response = await apiClient.post('/inference/execute', requestBody, {
+      timeout: 600000, // 10분 (추론 완료까지 대기)
+    });
+
+    console.log('✅ Inference response:', response.data);
+
+    // 응답 검증
+    if (!response.data.success || !response.data.videoUrl) {
+      throw new Error(response.data.error || '비디오 URL을 받지 못했습니다');
+    }
+
+    const {videoUrl, thumbnailUrl, message} = response.data;
+    console.log('📥 Video URL:', videoUrl);
+    console.log('🖼️ Thumbnail URL:', thumbnailUrl);
+
+    // 서버의 videoUrl을 그대로 반환 (다운로드 없이)
+    return {
+      success: true,
+      message: message || '영상 합성 완료',
+      resultVideoPath: videoUrl, // 서버 URL 그대로 사용
+      thumbnailUrl,
     };
-
-    // 토큰이 있으면 Authorization 헤더 추가
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const requestUrl = `${apiClient.defaults.baseURL}/inference/execute`;
-    console.log('🌐 Request URL:', requestUrl);
-    console.log('📋 Request headers:', headers);
-
-    // 비디오 파일 다운로드
-    const downloadResult = await RNFS.downloadFile({
-      fromUrl: requestUrl,
-      toFile: downloadDest,
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-      readTimeout: 120000,
-      connectionTimeout: 120000,
-    }).promise;
-
-    console.log('Download result:', downloadResult);
-
-    if (downloadResult.statusCode === 200) {
-      // 성공 시 로컬 파일 경로 반환
-      return {
-        success: true,
-        message: '영상 합성 완료',
-        resultVideoPath: `file://${downloadDest}`,
-      };
-    } else {
-      throw new Error(
-        `Download failed with status ${downloadResult.statusCode}`,
-      );
-    }
   } catch (error: any) {
-    console.error('executeInference error:', error);
+    console.error('❌ executeInference error:', error);
+    console.error('Error response:', error.response?.data);
 
-    // RNFS가 없거나 다운로드 실패 시 에러 반환
     return {
       success: false,
       message: '영상 합성 실패',
-      error: error.message || '다운로드 중 오류가 발생했습니다',
+      error: error.response?.data?.error || error.message || '처리 중 오류가 발생했습니다',
     };
   }
 };

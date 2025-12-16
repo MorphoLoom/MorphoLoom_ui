@@ -16,10 +16,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
 import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
-import {
-  saveVideoToGallery,
-  deleteTempVideo,
-} from '../../services/api/contentApi';
+import {deleteTempVideo} from '../../services/api/contentApi';
 import {useMediaUpload} from '../../hooks/useMediaUpload';
 import {useInference} from '../../hooks/useInference';
 
@@ -235,14 +232,8 @@ const HomeScreen: React.FC = () => {
   const handleSave = async () => {
     if (!resultVideo) return;
 
-    const result = await saveVideoToGallery(resultVideo);
-    if (result.success) {
-      showToast.success('저장 완료', result.message);
-      // 갤러리 저장 후 임시 파일 삭제
-      await deleteTempVideo(resultVideo);
-    } else {
-      showToast.error('저장 실패', result.message);
-    }
+    // TODO: 저장 기능 구현 필요 (서버 URL → 다운로드 → 갤러리 저장)
+    showToast.info('준비 중', '저장 기능은 곧 추가될 예정입니다');
   };
 
   const handleStart = async () => {

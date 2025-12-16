@@ -230,5 +230,6 @@ export interface InferenceStatusResponse {
   message: string;
   executedCommand?: string;
   resultVideoPath?: string;
+  thumbnailUrl?: string;
   error?: string;
 }
