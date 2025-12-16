@@ -206,6 +206,18 @@ export interface CreationLikeResponse {
   likes: number;
 }
 
+// 창작물 상세 조회 응답
+export interface CreationDetailResponse {
+  creationId: number;
+  title: string;
+  likes: number;
+  createdAt: string;
+  description: string;
+  username: string;
+  filename: string;
+  videoUrl: string;
+}
+
 // 컨텐츠 업로드 관련 타입
 export interface VideoUploadResponse {
   videoId: string;

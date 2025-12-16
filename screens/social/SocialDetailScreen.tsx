@@ -1,24 +1,22 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import Video from 'react-native-video';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
+import {useCreationDetail} from '../../hooks/useCreationDetail';
 
 interface SocialDetailScreenProps {
   route: {
     params: {
       item: {
         id: string;
-        title: string;
-        description: string;
-        time: string;
-        image: string;
       };
     };
   };
@@ -31,7 +29,69 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
 }) => {
   const {colors} = useTheme();
   const {item} = route.params;
+  const videoRef = useRef<any>(null);
   const [liked, setLiked] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const [paused, setPaused] = useState(false);
+
+  // 창작물 상세 조회
+  const {data: creation, isLoading, error} = useCreationDetail(item.id);
+
+  const handleVideoEnd = () => {
+    setShowControls(true);
+    setPaused(true);
+  };
+
+  const handleVideoPress = () => {
+    setShowControls(!showControls);
+  };
+
+  const handlePlayPause = (event: any) => {
+    event?.stopPropagation();
+    const newPausedState = !paused;
+
+    // 비디오가 끝난 상태에서 재생 버튼을 누르면 처음부터 재생
+    if (paused && videoRef.current) {
+      videoRef.current.seek(0);
+    }
+
+    setPaused(newPausedState);
+
+    // 재생 시작하면 컨트롤 숨기기 (일시정지 상태에서 재생으로 전환)
+    if (!newPausedState) {
+      setTimeout(() => setShowControls(false), 100);
+    }
+  };
+
+  const handleFullscreen = (event: any) => {
+    event?.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.presentFullscreenPlayer();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContainer, {backgroundColor: colors.background}]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error || !creation) {
+    return (
+      <View style={[styles.container, styles.centerContainer, {backgroundColor: colors.background}]}>
+        <Text style={[styles.errorText, {color: colors.error}]}>
+          데이터를 불러올 수 없습니다
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, {backgroundColor: colors.primary}]}
+          onPress={() => navigation.goBack()}>
+          <Text style={styles.retryButtonText}>돌아가기</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
@@ -50,14 +110,50 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
         <Text
           style={[styles.headerTitle, {color: colors.text}]}
           numberOfLines={1}>
-          {item.title}
+          {creation.title}
         </Text>
         <View style={styles.headerRightSpace} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 이미지 */}
-        <Image source={{uri: item.image}} style={styles.image} />
+        {/* 비디오 */}
+        <TouchableOpacity
+          style={styles.videoContainer}
+          activeOpacity={1}
+          onPress={handleVideoPress}>
+          <Video
+            ref={videoRef}
+            source={{uri: creation.videoUrl}}
+            style={styles.video}
+            resizeMode="contain"
+            controls={false}
+            paused={paused}
+            repeat={false}
+            onEnd={handleVideoEnd}
+          />
+          {showControls && (
+            <View style={styles.videoControlsOverlay}>
+              <View style={styles.controlsContainer}>
+                <TouchableOpacity
+                  style={styles.playPauseButton}
+                  onPress={handlePlayPause}
+                  activeOpacity={0.7}>
+                  <Ionicons
+                    name={paused ? 'play-circle' : 'pause-circle'}
+                    size={64}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.fullscreenButton}
+                  onPress={handleFullscreen}
+                  activeOpacity={0.7}>
+                  <Ionicons name="expand-outline" size={28} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* 정보 영역 */}
         <View style={styles.infoContainer}>
@@ -77,11 +173,16 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
               color={liked ? '#fff' : colors.primary}
             />
           </TouchableOpacity>
-          <Text style={[styles.time, {color: colors.textSecondary}]}>
-            {item.time}
-          </Text>
+          <View style={styles.metaInfo}>
+            <Text style={[styles.username, {color: colors.text}]}>
+              {creation.username}
+            </Text>
+            <Text style={[styles.likes, {color: colors.textSecondary}]}>
+              ❤️ {creation.likes}
+            </Text>
+          </View>
           <Text style={[styles.description, {color: colors.text}]}>
-            {item.description}
+            {creation.description}
           </Text>
         </View>
       </ScrollView>
@@ -92,6 +193,24 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -119,11 +238,42 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 30,
   },
-  image: {
+  videoContainer: {
     width: '100%',
     height: 400,
-    resizeMode: 'cover',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#000',
+    position: 'relative',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  videoControlsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  controlsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  playPauseButton: {
+    padding: 10,
+  },
+  fullscreenButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 8,
   },
   infoContainer: {
     padding: 20,
@@ -144,10 +294,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    zIndex: 10,
   },
-  time: {
-    fontSize: 14,
+  metaInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+    paddingRight: 60,
+  },
+  username: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  likes: {
+    fontSize: 14,
   },
   description: {
     fontSize: 16,

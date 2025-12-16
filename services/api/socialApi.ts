@@ -4,6 +4,7 @@ import type {
   Creation,
   CreateCreationRequest,
   CreationLikeResponse,
+  CreationDetailResponse,
 } from '../../types/api';
 
 // ========== 창작물(Creation) 관련 API ==========
@@ -59,4 +60,11 @@ export const deleteMyCreation = async (creationId: string): Promise<void> => {
   return apiFetch(`/creations/my/${creationId}`, {
     method: 'DELETE',
   });
+};
+
+// 8. 창작물 상세 조회
+export const fetchCreationDetail = async (
+  creationId: string,
+): Promise<CreationDetailResponse> => {
+  return apiFetch(`/creations/${creationId}`);
 };
