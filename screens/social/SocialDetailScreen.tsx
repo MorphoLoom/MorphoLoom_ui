@@ -47,7 +47,7 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   // 초기 좋아요 상태 설정
   useEffect(() => {
     if (creation) {
-      setLiked(creation.isLiked);
+      setLiked(creation.liked);
       setLikesCount(creation.likes);
     }
   }, [creation]);
@@ -86,7 +86,7 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   };
 
   const handleLikeToggle = () => {
-    if (isLiking || isUnliking) return;
+    if (isLiking || isUnliking) {return;}
 
     if (liked) {
       // 좋아요 취소

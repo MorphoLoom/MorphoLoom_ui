@@ -36,16 +36,6 @@ export const verifyEmail = async (
   });
 };
 
-// // 비밀번호 재설정 인증 코드 확인
-// export const verifyPasswordResetCode = async (
-//   request: VerifyEmailRequest,
-// ): Promise<VerifyEmailResponse> => {
-//   return apiFetch('/auth/password-reset/send-code', {
-//     method: 'POST',
-//     data: request,
-//   });
-// };
-
 // 회원가입
 export const signup = async (
   request: RegisterRequest,

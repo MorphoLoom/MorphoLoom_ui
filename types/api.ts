@@ -226,7 +226,7 @@ export interface CreationDetailResponse {
   username: string;
   filename: string;
   videoUrl: string;
-  isLiked: boolean;
+  liked: boolean; // 사용자의 좋아요 여부
 }
 
 // 컨텐츠 업로드 관련 타입

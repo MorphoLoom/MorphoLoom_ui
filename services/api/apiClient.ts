@@ -58,6 +58,8 @@ apiClient.interceptors.request.use(
       }
     } else {
       console.log('🔓 Public endpoint - no token needed:', url);
+      // 공개 엔드포인트는 명시적으로 Authorization 헤더 제거
+      delete config.headers.Authorization;
     }
 
     return config;
