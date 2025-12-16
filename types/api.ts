@@ -216,6 +216,7 @@ export interface CreationDetailResponse {
   username: string;
   filename: string;
   videoUrl: string;
+  isLiked: boolean;
 }
 
 // 컨텐츠 업로드 관련 타입

@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import Video from 'react-native-video';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreationDetail} from '../../hooks/useCreationDetail';
+import {useCreationLike} from '../../hooks/useCreationLike';
 
 interface SocialDetailScreenProps {
   route: {
@@ -31,11 +32,21 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
   const {item} = route.params;
   const videoRef = useRef<any>(null);
   const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const [paused, setPaused] = useState(false);
 
   // 창작물 상세 조회
   const {data: creation, isLoading, error} = useCreationDetail(item.id);
+  const {like, unlike, isLiking, isUnliking} = useCreationLike(item.id);
+
+  // 초기 좋아요 상태 설정
+  useEffect(() => {
+    if (creation) {
+      setLiked(creation.isLiked);
+      setLikesCount(creation.likes);
+    }
+  }, [creation]);
 
   const handleVideoEnd = () => {
     setShowControls(true);
@@ -67,6 +78,44 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
     event?.stopPropagation();
     if (videoRef.current) {
       videoRef.current.presentFullscreenPlayer();
+    }
+  };
+
+  const handleLikeToggle = () => {
+    if (isLiking || isUnliking) return;
+
+    if (liked) {
+      // 좋아요 취소
+      setLiked(false);
+      setLikesCount(prev => prev - 1);
+
+      unlike(undefined, {
+        onSuccess: (data) => {
+          // 서버 응답으로 정확한 값 업데이트
+          setLikesCount(data.likes);
+        },
+        onError: () => {
+          // 실패 시 롤백
+          setLiked(true);
+          setLikesCount(prev => prev + 1);
+        },
+      });
+    } else {
+      // 좋아요 추가
+      setLiked(true);
+      setLikesCount(prev => prev + 1);
+
+      like(undefined, {
+        onSuccess: (data) => {
+          // 서버 응답으로 정확한 값 업데이트
+          setLikesCount(data.likes);
+        },
+        onError: () => {
+          // 실패 시 롤백
+          setLiked(false);
+          setLikesCount(prev => prev - 1);
+        },
+      });
     }
   };
 
@@ -157,29 +206,24 @@ const SocialDetailScreen: React.FC<SocialDetailScreenProps> = ({
 
         {/* 정보 영역 */}
         <View style={styles.infoContainer}>
-          <TouchableOpacity
-            style={[
-              styles.likeButton,
-              {
-                backgroundColor: liked ? colors.primary : colors.background,
-                borderColor: colors.primary,
-              },
-            ]}
-            onPress={() => setLiked(!liked)}
-            activeOpacity={0.7}>
-            <Ionicons
-              name={liked ? 'star' : 'star-outline'}
-              size={24}
-              color={liked ? '#fff' : colors.primary}
-            />
-          </TouchableOpacity>
           <View style={styles.metaInfo}>
             <Text style={[styles.username, {color: colors.text}]}>
               {creation.username}
             </Text>
-            <Text style={[styles.likes, {color: colors.textSecondary}]}>
-              ❤️ {creation.likes}
-            </Text>
+            <TouchableOpacity
+              style={styles.likeContainer}
+              onPress={handleLikeToggle}
+              activeOpacity={0.7}
+              disabled={isLiking || isUnliking}>
+              <Ionicons
+                name={liked ? 'heart' : 'heart-outline'}
+                size={24}
+                color={liked ? '#FF4458' : colors.textSecondary}
+              />
+              <Text style={[styles.likesCount, {color: colors.textSecondary}]}>
+                {likesCount}
+              </Text>
+            </TouchableOpacity>
           </View>
           <Text style={[styles.description, {color: colors.text}]}>
             {creation.description}
@@ -277,38 +321,25 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     padding: 20,
-    position: 'relative',
-  },
-  likeButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 10,
   },
   metaInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    paddingRight: 60,
   },
   username: {
     fontSize: 16,
     fontWeight: '600',
   },
-  likes: {
-    fontSize: 14,
+  likeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  likesCount: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   description: {
     fontSize: 16,
