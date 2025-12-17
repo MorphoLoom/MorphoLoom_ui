@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {COLORS} from '../../constants/colors';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreationRankings} from '../../hooks/useRanking';
+import {logger} from '../../utils/logger';
 
 interface RankingScreenProps {
   navigation?: any;
@@ -165,7 +166,7 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
               <Image
                 source={{uri: item.thumbnail}}
                 style={styles.topCircleImage}
-                onError={() => console.log('Image load error:', item.thumbnail)}
+                onError={() => logger.log('Image load error:', item.thumbnail)}
               />
             ) : (
               <View style={[styles.topCircleImage, styles.placeholderImage]}>
@@ -203,7 +204,7 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
           <Image
             source={{uri: item.thumbnail}}
             style={styles.avatar}
-            onError={() => console.log('Image load error:', item.thumbnail)}
+            onError={() => logger.log('Image load error:', item.thumbnail)}
           />
         ) : (
           <View style={[styles.avatar, styles.placeholderAvatar]}>

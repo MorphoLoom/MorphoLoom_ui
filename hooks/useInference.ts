@@ -5,6 +5,7 @@ import type {
   VideoUploadResponse,
   ImageUploadResponse,
 } from '../types/api';
+import {logger} from '../utils/logger';
 
 export const useInference = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -28,9 +29,9 @@ export const useInference = () => {
 
     try {
       // 1. 추론 서비스 상태 확인
-      console.log('Checking inference service status...');
+      logger.log('Checking inference service status...');
       const statusResult = await getInferenceStatus();
-      console.log('Inference status:', statusResult);
+      logger.log('Inference status:', statusResult);
 
       if (!statusResult.success) {
         setIsProcessing(false);
@@ -43,7 +44,7 @@ export const useInference = () => {
       }
 
       // 2. AI 추론 실행
-      console.log('Executing inference...');
+      logger.log('Executing inference...');
 
       // URL에서 파일명만 추출
       const extractFileName = (url: string) => {
@@ -54,15 +55,15 @@ export const useInference = () => {
       const sourceFileName = extractFileName(uploadedImageUrl.fileUrl);
       const drivingFileName = extractFileName(uploadedVideoUrl.fileUrl);
 
-      console.log('Source file name:', sourceFileName);
-      console.log('Driving file name:', drivingFileName);
+      logger.log('Source file name:', sourceFileName);
+      logger.log('Driving file name:', drivingFileName);
 
       const inferenceResult = await executeInference({
         sourcePath: sourceFileName,
         drivingPath: drivingFileName,
       });
 
-      console.log('Inference result:', inferenceResult);
+      logger.log('Inference result:', inferenceResult);
 
       setIsProcessing(false);
 
@@ -87,7 +88,7 @@ export const useInference = () => {
         );
       }
     } catch (error) {
-      console.error('Inference failed:', error);
+      logger.error('Inference failed:', error);
       setIsProcessing(false);
       showToast.error(
         '합성 실패',

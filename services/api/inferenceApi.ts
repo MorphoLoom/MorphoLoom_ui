@@ -1,4 +1,5 @@
 import {apiClient} from './apiClient';
+import {logger} from '../../utils/logger';
 import type {
   InferenceRequest,
   InferenceStatusResponse,
@@ -24,15 +25,15 @@ export const executeInference = async (
   };
 
   try {
-    console.log('🎬 Starting inference...');
-    console.log('📦 Request body:', requestBody);
+    logger.log('🎬 Starting inference...');
+    logger.log('📦 Request body:', requestBody);
 
     // POST 요청으로 추론 실행 (JSON 응답 받기)
     const response = await apiClient.post('/inference/execute', requestBody, {
       timeout: 600000, // 10분 (추론 완료까지 대기)
     });
 
-    console.log('✅ Inference response:', response.data);
+    logger.log('✅ Inference response:', response.data);
 
     // 응답 검증
     if (!response.data.success || !response.data.videoUrl) {
@@ -40,8 +41,8 @@ export const executeInference = async (
     }
 
     const {videoUrl, thumbnailUrl, message} = response.data;
-    console.log('📥 Video URL:', videoUrl);
-    console.log('🖼️ Thumbnail URL:', thumbnailUrl);
+    logger.log('📥 Video URL:', videoUrl);
+    logger.log('🖼️ Thumbnail URL:', thumbnailUrl);
 
     // 서버의 videoUrl을 그대로 반환 (다운로드 없이)
     return {
@@ -51,8 +52,8 @@ export const executeInference = async (
       thumbnailUrl,
     };
   } catch (error: any) {
-    console.error('❌ executeInference error:', error);
-    console.error('Error response:', error.response?.data);
+    logger.error('❌ executeInference error:', error);
+    logger.error('Error response:', error.response?.data);
 
     return {
       success: false,
@@ -76,7 +77,7 @@ export const getInferenceStatus =
       const response = await apiClient.get('/inference/status');
       return response.data;
     } catch (error: any) {
-      console.error('getInferenceStatus error:', error);
+      logger.error('getInferenceStatus error:', error);
       return {
         success: false,
         message: '서비스 상태 확인 실패',

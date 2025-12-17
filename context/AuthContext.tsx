@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {API_BASE_URL} from '@env';
 import type {AuthUser} from '../types/api';
+import {logger} from '../utils/logger';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -36,7 +37,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
       const decoded = JSON.parse(atob(payload));
       return decoded.exp ? decoded.exp * 1000 : null; // 밀리초로 변환
     } catch (error) {
-      console.error('토큰 디코딩 실패:', error);
+      logger.error('토큰 디코딩 실패:', error);
       return null;
     }
   };
@@ -61,8 +62,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
 
       // 만료 2분 전이거나 이미 만료되었으면 갱신 (토큰이 5분 만료인 경우 3분 시점에 갱신)
       if (timeUntilExpiry < 2 * 60 * 1000) {
-        console.log('🔄 [AuthContext] 토큰 만료 임박 또는 만료됨 - 자동 갱신 시작');
-        console.log(`⏱️ [AuthContext] 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
+        logger.log('🔄 [AuthContext] 토큰 만료 임박 또는 만료됨 - 자동 갱신 시작');
+        logger.log(`⏱️ [AuthContext] 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
 
         const response = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
@@ -78,12 +79,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
         await AsyncStorage.setItem('refreshToken', newRefreshToken);
 
         setAccessToken(newAccessToken);
-        // console.log('✅ [AuthContext] 토큰 자동 갱신 완료');
+        // logger.log('✅ [AuthContext] 토큰 자동 갱신 완료');
       } else {
-        // console.log(`✅ [AuthContext] 토큰 유효 - 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
+        // logger.log(`✅ [AuthContext] 토큰 유효 - 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
       }
     } catch (error) {
-      console.error('❌ [AuthContext] 토큰 자동 갱신 실패:', error);
+      logger.error('❌ [AuthContext] 토큰 자동 갱신 실패:', error);
       // 갱신 실패 시 로그아웃
       await clearAuth();
     }
@@ -109,7 +110,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
           setIsLoggedIn(false);
         }
       } catch (error) {
-        console.error('Failed to load auth data:', error);
+        logger.error('Failed to load auth data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -125,11 +126,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
     }
 
     const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
-      console.log(`📱 [AuthContext] AppState 변경: ${nextAppState}`);
+      logger.log(`📱 [AuthContext] AppState 변경: ${nextAppState}`);
 
       // 앱이 active 상태로 전환될 때 (백그라운드에서 복귀, 화면 켜짐)
       if (nextAppState === 'active') {
-        console.log('🔄 [AuthContext] 앱 활성화 감지 - 토큰 갱신 체크');
+        logger.log('🔄 [AuthContext] 앱 활성화 감지 - 토큰 갱신 체크');
         await refreshTokenIfNeeded();
       }
     });
@@ -154,7 +155,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
       setUser(user);
       setIsLoggedIn(true);
     } catch (error) {
-      console.error('Failed to save auth data:', error);
+      logger.error('Failed to save auth data:', error);
       throw error;
     }
   };
@@ -168,7 +169,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
       setUser(null);
       setIsLoggedIn(false);
     } catch (error) {
-      console.error('Failed to clear auth data:', error);
+      logger.error('Failed to clear auth data:', error);
       throw error;
     }
   };

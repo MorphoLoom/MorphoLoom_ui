@@ -16,6 +16,7 @@ import {
   useResetPassword,
 } from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
+import {logger} from '../../utils/logger';
 
 interface ForgotPasswordScreenProps {
   onBack: () => void;
@@ -55,7 +56,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
       setIsVerificationSent(true);
       showToast.success('인증번호 발송', '이메일로 인증번호가 발송되었습니다');
     } catch (error: any) {
-      console.error('인증번호 발송 에러:', error);
+      logger.error('인증번호 발송 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
@@ -79,7 +80,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
       setIsEmailVerified(true);
       showToast.success('인증 완료', '이메일 인증이 완료되었습니다');
     } catch (error: any) {
-      console.error('이메일 인증 에러:', error);
+      logger.error('이메일 인증 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
@@ -132,7 +133,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
         onBack();
       }, 1500);
     } catch (error: any) {
-      console.error('비밀번호 재설정 에러:', error);
+      logger.error('비밀번호 재설정 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||

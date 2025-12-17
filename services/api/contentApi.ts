@@ -1,4 +1,5 @@
 import apiFetch from './apiClient';
+import {logger} from '../../utils/logger';
 import type {VideoUploadResponse, ImageUploadResponse} from '../../types/api';
 
 /**
@@ -6,8 +7,8 @@ import type {VideoUploadResponse, ImageUploadResponse} from '../../types/api';
  * POST /api/v1/content/videos/upload
  */
 export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
-  console.log('🎥 [uploadVideo] Starting video upload...');
-  console.log('📋 [uploadVideo] File info:', {
+  logger.log('🎥 [uploadVideo] Starting video upload...');
+  logger.log('📋 [uploadVideo] File info:', {
     uri: file.uri,
     type: file.type,
     fileName: file.fileName,
@@ -20,7 +21,7 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
     name: file.fileName || 'video.mp4',
   } as any);
 
-  console.log('📤 [uploadVideo] Sending request to /content/videos/upload');
+  logger.log('📤 [uploadVideo] Sending request to /content/videos/upload');
 
   const response = await apiFetch<VideoUploadResponse>('/content/videos/upload', {
     method: 'POST',
@@ -31,7 +32,7 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
     timeout: 60000,
   });
 
-  console.log('✅ [uploadVideo] Upload successful:', response);
+  logger.log('✅ [uploadVideo] Upload successful:', response);
   return response;
 };
 
@@ -40,8 +41,8 @@ export const uploadVideo = async (file: any): Promise<VideoUploadResponse> => {
  * POST /api/v1/content/images/upload
  */
 export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
-  console.log('🖼️ [uploadImage] Starting image upload...');
-  console.log('📋 [uploadImage] File info:', {
+  logger.log('🖼️ [uploadImage] Starting image upload...');
+  logger.log('📋 [uploadImage] File info:', {
     uri: file.uri,
     type: file.type,
     fileName: file.fileName,
@@ -54,7 +55,7 @@ export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
     name: file.fileName || 'image.png',
   } as any);
 
-  console.log('📤 [uploadImage] Sending request to /content/images/upload');
+  logger.log('📤 [uploadImage] Sending request to /content/images/upload');
 
   const response = await apiFetch<ImageUploadResponse>('/content/images/upload', {
     method: 'POST',
@@ -65,7 +66,7 @@ export const uploadImage = async (file: any): Promise<ImageUploadResponse> => {
     timeout: 60000,
   });
 
-  console.log('✅ [uploadImage] Upload successful:', response);
+  logger.log('✅ [uploadImage] Upload successful:', response);
   return response;
 };
 
@@ -90,7 +91,7 @@ export const saveVideoToGallery = async (
       message: '갤러리에 저장되었습니다',
     };
   } catch (error: any) {
-    console.error('saveVideoToGallery error:', error);
+    logger.error('saveVideoToGallery error:', error);
     return {
       success: false,
       message: error.message || '갤러리 저장에 실패했습니다',
@@ -115,14 +116,14 @@ export const deleteTempVideo = async (
 
     if (exists) {
       await RNFS.unlink(cleanPath);
-      console.log('Temp video deleted:', cleanPath);
+      logger.log('Temp video deleted:', cleanPath);
       return {success: true};
     } else {
-      console.log('Temp video not found:', cleanPath);
+      logger.log('Temp video not found:', cleanPath);
       return {success: false};
     }
   } catch (error: any) {
-    console.error('deleteTempVideo error:', error);
+    logger.error('deleteTempVideo error:', error);
     return {success: false};
   }
 };

@@ -11,6 +11,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreations, useMyCreations} from '../../hooks/useSocialPosts';
+import {logger} from '../../utils/logger';
 import type {Creation} from '../../types/api';
 
 interface SocialScreenProps {
@@ -39,7 +40,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
         <Image
           source={{uri: item.thumbnail}}
           style={styles.gridImage}
-          onError={() => console.log('Image load error:', item.thumbnail)}
+          onError={() => logger.log('Image load error:', item.thumbnail)}
         />
       ) : (
         <View style={[styles.gridImage, styles.placeholderImage]}>
@@ -106,7 +107,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
         <Image
           source={{uri: item.thumbnail}}
           style={styles.gridImage}
-          onError={() => console.log('Image load error:', item.thumbnail)}
+          onError={() => logger.log('Image load error:', item.thumbnail)}
         />
       ) : (
         <View style={[styles.gridImage, styles.placeholderImage]}>

@@ -16,6 +16,7 @@ import {
   useVerifyEmail,
 } from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
+import {logger} from '../../utils/logger';
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -60,7 +61,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
           );
         },
         onError: (error: any) => {
-          console.error('인증번호 발송 에러:', error);
+          logger.error('인증번호 발송 에러:', error);
           const errorMessage =
             error?.response?.data?.message ||
             error?.message ||
@@ -89,7 +90,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
           showToast.success('인증 완료', '이메일 인증이 완료되었습니다');
         },
         onError: (error: any) => {
-          console.error('이메일 인증 에러:', error);
+          logger.error('이메일 인증 에러:', error);
           const errorMessage =
             error?.response?.data?.message ||
             error?.message ||
@@ -150,7 +151,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
       // 로그인 페이지로 이동
       onBack();
     } catch (error: any) {
-      console.error('회원가입 에러:', error);
+      logger.error('회원가입 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||

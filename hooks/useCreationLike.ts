@@ -1,5 +1,6 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {likeCreation, unlikeCreation} from '../services/api/socialApi';
+import {logger} from '../utils/logger';
 
 export const useCreationLike = (creationId: string) => {
   const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export const useCreationLike = (creationId: string) => {
       queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
     },
     onError: error => {
-      console.error('Like error:', error);
+      logger.error('Like error:', error);
     },
   });
 
@@ -34,7 +35,7 @@ export const useCreationLike = (creationId: string) => {
       queryClient.invalidateQueries({queryKey: ['creations', 'liked']});
     },
     onError: error => {
-      console.error('Unlike error:', error);
+      logger.error('Unlike error:', error);
     },
   });
 

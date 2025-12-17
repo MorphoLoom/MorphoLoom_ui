@@ -22,6 +22,7 @@ import {deleteTempVideo} from '../../services/api/contentApi';
 import {useMediaUpload} from '../../hooks/useMediaUpload';
 import {useInference} from '../../hooks/useInference';
 import {useCreateCreation} from '../../hooks/useSocialPosts';
+import {logger} from '../../utils/logger';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -206,7 +207,7 @@ const HomeScreen: React.FC = () => {
       const extractedFilename = parts[parts.length - 1];
       return decodeURIComponent(extractedFilename);
     } catch (error) {
-      console.error('Failed to extract filename:', error);
+      logger.error('Failed to extract filename:', error);
       return 'video.mp4';
     }
   };
@@ -315,7 +316,7 @@ const HomeScreen: React.FC = () => {
           setFilename('');
         },
         onError: (error) => {
-          console.error('Registration error:', error);
+          logger.error('Registration error:', error);
           showToast.error('등록 실패', '창작물 등록에 실패했습니다');
         },
       },
@@ -324,7 +325,7 @@ const HomeScreen: React.FC = () => {
 
   const handleStart = async () => {
     if (!videoAsset || !imageAsset) {
-      console.log('비디오와 이미지를 모두 선택해주세요');
+      logger.log('비디오와 이미지를 모두 선택해주세요');
       return;
     }
 

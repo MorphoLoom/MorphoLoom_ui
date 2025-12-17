@@ -19,6 +19,7 @@ import type {
   ResetPasswordRequest,
   DeleteAccountRequest,
 } from '../types/api';
+import {logger} from '../utils/logger';
 
 // 이메일 인증 코드 발송 mutation
 export const useSendVerification = () => {
@@ -26,7 +27,7 @@ export const useSendVerification = () => {
     mutationFn: (request: SendVerificationRequest) =>
       sendVerification(request),
     onSuccess: data => {
-      console.log('Verification email sent:', data.message);
+      logger.log('Verification email sent:', data.message);
     },
   });
 };
@@ -36,7 +37,7 @@ export const useVerifyEmail = () => {
   return useMutation({
     mutationFn: (request: VerifyEmailRequest) => verifyEmail(request),
     onSuccess: data => {
-      console.log('Email verified:', data.message);
+      logger.log('Email verified:', data.message);
     },
   });
 };
@@ -59,7 +60,7 @@ export const useSignup = () => {
     mutationFn: (request: RegisterRequest) => signup(request),
     onSuccess: data => {
       // 토큰을 AsyncStorage에 저장
-      console.log('Signup success:', {
+      logger.log('Signup success:', {
         // accessToken: data.accessToken,
         // refreshToken: data.refreshToken,
         user: data.user,
@@ -80,7 +81,7 @@ export const useLogin = () => {
     mutationFn: (request: LoginRequest) => login(request),
     onSuccess: data => {
       // 토큰을 AsyncStorage에 저장
-      console.log('Login success:', {
+      logger.log('Login success:', {
         // accessToken: data.accessToken,
         // refreshToken: data.refreshToken,
         user: data.user,
@@ -101,7 +102,7 @@ export const useSocialLogin = () => {
     mutationFn: (request: SocialLoginRequest) => socialLogin(request),
     onSuccess: data => {
       // 토큰을 AsyncStorage에 저장
-      console.log('Social login success:', {
+      logger.log('Social login success:', {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         user: data.user,
@@ -121,7 +122,7 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: (refreshToken: string) => logout(refreshToken),
     onSuccess: () => {
-      console.log('Logout success');
+      logger.log('Logout success');
       // 모든 캐시 삭제
       queryClient.clear();
     },
@@ -133,7 +134,7 @@ export const useResetPassword = () => {
   return useMutation({
     mutationFn: (request: ResetPasswordRequest) => resetPassword(request),
     onSuccess: data => {
-      console.log('Password reset success:', data.message);
+      logger.log('Password reset success:', data.message);
     },
   });
 };
@@ -145,7 +146,7 @@ export const useDeleteAccount = () => {
   return useMutation({
     mutationFn: (request: DeleteAccountRequest) => deleteAccount(request),
     onSuccess: data => {
-      console.log('Account deleted:', data.message);
+      logger.log('Account deleted:', data.message);
       // 모든 캐시 삭제
       queryClient.clear();
     },

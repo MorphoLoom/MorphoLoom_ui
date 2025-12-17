@@ -1,4 +1,5 @@
 import apiFetch from './apiClient';
+import {logger} from '../../utils/logger';
 import type {
   SendVerificationRequest,
   SendVerificationResponse,
@@ -78,7 +79,7 @@ export const logout = async (refreshToken: string): Promise<{message: string}> =
 export const resetPassword = async (
   request: ResetPasswordRequest,
 ): Promise<ResetPasswordResponse> => {
-  console.log('Resetting password with request:', request);
+  logger.log('Resetting password with request:', request);
   return apiFetch('/auth/password-reset/verify', {
     method: 'POST',
     data: request,

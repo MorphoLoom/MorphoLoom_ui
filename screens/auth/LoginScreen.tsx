@@ -12,6 +12,7 @@ import {useAuth as useAuthContext} from '../../context/AuthContext';
 import {useLogin} from '../../hooks/useAuth';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {showToast} from '../../utils/toast';
+import {logger} from '../../utils/logger';
 import SignUpScreen from './SignUpScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 
@@ -47,7 +48,7 @@ const LoginScreen: React.FC = () => {
         showToast.success('환영합니다!', 'MorphoLoom에 오신 것을 환영합니다!');
       }
     } catch (error: any) {
-      console.error('로그인 에러:', error);
+      logger.error('로그인 에러:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||

@@ -1,12 +1,13 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_BASE_URL, API_TIMEOUT, ENVIRONMENT} from '@env';
+import {logger} from '../../utils/logger';
 
 // API 기본 설정 (환경변수에서 로드)
 const BASE_URL = API_BASE_URL;
 const TIMEOUT = parseInt(API_TIMEOUT || '10000', 10);
 
-console.log('🌐 API Configuration:', {
+logger.log('🌐 API Configuration:', {
   baseURL: BASE_URL,
   timeout: TIMEOUT,
   environment: ENVIRONMENT,
@@ -58,13 +59,13 @@ apiClient.interceptors.request.use(
       // AsyncStorage에서 토큰 가져오기
       const token = await AsyncStorage.getItem('accessToken');
 
-      console.log('🔑 Token check:', token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN');
+      logger.log('🔑 Token check:', token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN');
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } else {
-      console.log('🔓 Public endpoint - no token needed:', url);
+      logger.log('🔓 Public endpoint - no token needed:', url);
       // 공개 엔드포인트는 명시적으로 Authorization 헤더 제거
       delete config.headers.Authorization;
     }
@@ -93,11 +94,11 @@ apiClient.interceptors.response.use(
 
       // 401 에러: 토큰 만료 (public endpoint 제외)
       if (status === 401 && !originalRequest._retry && !isPublicEndpoint) {
-        console.log('🔄 [apiClient] 401 에러 감지 - 토큰 갱신 시작');
+        logger.log('🔄 [apiClient] 401 에러 감지 - 토큰 갱신 시작');
 
         if (isRefreshing) {
           // 이미 토큰 갱신 중이면 대기
-          console.log('⏳ [apiClient] 토큰 갱신 대기열에 추가');
+          logger.log('⏳ [apiClient] 토큰 갱신 대기열에 추가');
           return new Promise(resolve => {
             addRefreshSubscriber((token: string) => {
               originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -112,17 +113,17 @@ apiClient.interceptors.response.use(
         try {
           // AsyncStorage에서 refreshToken 가져오기
           const refreshToken = await AsyncStorage.getItem('refreshToken');
-          console.log('🔑 [apiClient] refreshToken:', refreshToken ? 'EXISTS' : 'NOT FOUND');
+          logger.log('🔑 [apiClient] refreshToken:', refreshToken ? 'EXISTS' : 'NOT FOUND');
 
           if (!refreshToken) {
             // refreshToken이 없으면 로그아웃 처리
-            console.log('❌ [apiClient] refreshToken 없음 - 로그아웃');
+            logger.log('❌ [apiClient] refreshToken 없음 - 로그아웃');
             await handleLogout();
             return Promise.reject(error);
           }
 
           // 토큰 갱신 API 호출
-          console.log('📡 [apiClient] 토큰 갱신 API 호출:', `${BASE_URL}/auth/refresh`);
+          logger.log('📡 [apiClient] 토큰 갱신 API 호출:', `${BASE_URL}/auth/refresh`);
           const response = await axios.post(
             `${BASE_URL}/auth/refresh`,
             {refreshToken},
@@ -131,7 +132,7 @@ apiClient.interceptors.response.use(
             },
           );
 
-          console.log('✅ [apiClient] 토큰 갱신 성공');
+          logger.log('✅ [apiClient] 토큰 갱신 성공');
           const {accessToken, refreshToken: newRefreshToken} = response.data;
 
           // 새 토큰 저장
@@ -147,11 +148,11 @@ apiClient.interceptors.response.use(
 
           isRefreshing = false;
 
-          console.log('🔄 [apiClient] 원래 요청 재시도:', originalRequest.url);
+          logger.log('🔄 [apiClient] 원래 요청 재시도:', originalRequest.url);
           // 원래 요청 재시도
           return apiClient(originalRequest);
         } catch (refreshError) {
-          console.error('❌ [apiClient] 토큰 갱신 실패:', refreshError);
+          logger.error('❌ [apiClient] 토큰 갱신 실패:', refreshError);
           isRefreshing = false;
           refreshSubscribers = [];
 
@@ -160,15 +161,15 @@ apiClient.interceptors.response.use(
           return Promise.reject(refreshError);
         }
       } else if (status === 403) {
-        console.log('⛔ Forbidden - 권한이 없습니다');
+        logger.log('⛔ Forbidden - 권한이 없습니다');
       } else if (status === 404) {
-        console.log('🔍 Not Found - 리소스를 찾을 수 없습니다');
+        logger.log('🔍 Not Found - 리소스를 찾을 수 없습니다');
       } else if (status >= 500) {
-        console.log('💥 Server Error - 서버 오류가 발생했습니다');
+        logger.log('💥 Server Error - 서버 오류가 발생했습니다');
       }
     } else if (error.request) {
       // 요청은 보냈지만 응답을 받지 못한 경우
-      console.log('Network Error - 네트워크 연결을 확인하세요');
+      logger.log('Network Error - 네트워크 연결을 확인하세요');
     }
 
     return Promise.reject(error);
@@ -179,10 +180,10 @@ apiClient.interceptors.response.use(
 const handleLogout = async () => {
   try {
     await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
-    console.log('로그아웃 처리 완료 - 로그인 화면으로 이동');
+    logger.log('로그아웃 처리 완료 - 로그인 화면으로 이동');
     // AuthContext의 상태가 변경되면 App.tsx에서 자동으로 LoginScreen으로 이동됨
   } catch (error) {
-    console.error('로그아웃 처리 중 오류:', error);
+    logger.error('로그아웃 처리 중 오류:', error);
   }
 };
 
@@ -192,19 +193,19 @@ async function apiFetch<T>(
   config?: AxiosRequestConfig,
 ): Promise<T> {
   try {
-    console.log('🔵 API 요청:', endpoint, config?.method, config?.data);
+    logger.log('🔵 API 요청:', endpoint, config?.method, config?.data);
     const response = await apiClient.request<T>({
       url: endpoint,
       ...config,
     });
-    console.log('🟢 API 응답:', endpoint, response.status, response.data);
+    logger.log('🟢 API 응답:', endpoint, response.status, response.data);
     return response.data;
   } catch (error: any) {
-    console.error('🔴 API 에러:', endpoint);
-    console.error('에러 전체:', error);
-    console.error('에러 response:', error.response);
-    console.error('에러 response.data:', error.response?.data);
-    console.error('에러 message:', error.message);
+    logger.error('🔴 API 에러:', endpoint);
+    logger.error('에러 전체:', error);
+    logger.error('에러 response:', error.response);
+    logger.error('에러 response.data:', error.response?.data);
+    logger.error('에러 message:', error.message);
     throw error;
   }
 }

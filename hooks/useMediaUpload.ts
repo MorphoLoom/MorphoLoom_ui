@@ -7,6 +7,7 @@ import type {
   VideoUploadResponse,
   ImageUploadResponse,
 } from '../types/api';
+import {logger} from '../utils/logger';
 
 interface MediaAsset {
   uri: string;
@@ -31,7 +32,7 @@ export const useMediaUpload = () => {
 
     if (result.assets && result.assets[0]) {
       const selectedFile = result.assets[0];
-      console.log('Selected asset:', selectedFile);
+      logger.log('Selected asset:', selectedFile);
 
       // 업로드 로딩 시작
       if (type === 'video') {
@@ -55,7 +56,7 @@ export const useMediaUpload = () => {
           fileName: newFileName,
         };
 
-        console.log('📤 Uploading file:', {
+        logger.log('📤 Uploading file:', {
           type,
           fileName: newFileName,
           uri: selectedFile.uri,
@@ -66,11 +67,11 @@ export const useMediaUpload = () => {
         let uploadResponse;
         if (type === 'video') {
           uploadResponse = await uploadVideo(fileData);
-          console.log('✅ Video upload response:', uploadResponse);
+          logger.log('✅ Video upload response:', uploadResponse);
           setUploadedVideoUrl(uploadResponse);
         } else {
           uploadResponse = await uploadImage(fileData);
-          console.log('✅ Image upload response:', uploadResponse);
+          logger.log('✅ Image upload response:', uploadResponse);
           setUploadedImageUrl(uploadResponse);
         }
 
@@ -95,7 +96,7 @@ export const useMediaUpload = () => {
           {duration: 3000},
         );
       } catch (error) {
-        console.error('Upload failed:', error);
+        logger.error('Upload failed:', error);
 
         // 로딩 종료
         if (type === 'video') {
