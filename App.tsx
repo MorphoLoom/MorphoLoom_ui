@@ -7,6 +7,7 @@ import Header from './app/Header';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-toast-message';
+import {AnimatedSplash} from './components/AnimatedSplash';
 import {
   LoginScreen,
   HomeScreen,
@@ -184,18 +185,30 @@ function MainTabs(): React.JSX.Element {
 }
 
 function AppContent(): React.JSX.Element {
-  const {isLoggedIn} = useAuth();
+  const {isLoggedIn, isLoading} = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      SplashScreen.hide();
-    }, 1000);
+    // Native splash 숨기고 JS Splash 표시
+    SplashScreen.hide();
   }, []);
 
+  // JS Splash 표시 중
+  if (showSplash) {
+    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
+  }
+
+  // 인증 로딩 중
+  if (isLoading) {
+    return <View style={{flex: 1, backgroundColor: '#FFFFFF'}} />;
+  }
+
+  // 로그인 안 됨
   if (!isLoggedIn) {
     return <LoginScreen />;
   }
 
+  // 메인 앱
   return (
     <NavigationContainer>
       <MainTabs />
