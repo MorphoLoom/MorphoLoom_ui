@@ -1,17 +1,22 @@
-import React, {createContext, useState, useContext, useEffect} from 'react';
+import React, {createContext, useState, useContext, useEffect, useRef} from 'react';
+import {AppState, AppStateStatus} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import {API_BASE_URL} from '@env';
 import type {AuthUser} from '../types/api';
 
 interface AuthContextType {
   isLoggedIn: boolean;
   user: AuthUser | null;
   accessToken: string | null;
+  isLoading: boolean;
   setAuthData: (
     accessToken: string,
     refreshToken: string,
     user: AuthUser,
   ) => Promise<void>;
   clearAuth: () => Promise<void>;
+  refreshTokenIfNeeded: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,8 +27,69 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 앱 시작 시 저장된 토큰 확인 및 주기적 검증
+  // JWT 토큰 디코딩하여 만료 시간 확인
+  const getTokenExpiry = (token: string): number | null => {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded.exp ? decoded.exp * 1000 : null; // 밀리초로 변환
+    } catch (error) {
+      console.error('토큰 디코딩 실패:', error);
+      return null;
+    }
+  };
+
+  // 토큰 갱신 함수
+  const refreshTokenIfNeeded = async () => {
+    try {
+      const token = await AsyncStorage.getItem('accessToken');
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+
+      if (!token || !refreshToken) {
+        return;
+      }
+
+      const expiry = getTokenExpiry(token);
+      if (!expiry) {
+        return;
+      }
+
+      const now = Date.now();
+      const timeUntilExpiry = expiry - now;
+
+      // 만료 2분 전이거나 이미 만료되었으면 갱신 (토큰이 5분 만료인 경우 3분 시점에 갱신)
+      if (timeUntilExpiry < 2 * 60 * 1000) {
+        console.log('🔄 [AuthContext] 토큰 만료 임박 또는 만료됨 - 자동 갱신 시작');
+        console.log(`⏱️ [AuthContext] 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
+
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {refreshToken},
+          {
+            headers: {'Content-Type': 'application/json'},
+          },
+        );
+
+        const {accessToken: newAccessToken, refreshToken: newRefreshToken} = response.data;
+
+        await AsyncStorage.setItem('accessToken', newAccessToken);
+        await AsyncStorage.setItem('refreshToken', newRefreshToken);
+
+        setAccessToken(newAccessToken);
+        // console.log('✅ [AuthContext] 토큰 자동 갱신 완료');
+      } else {
+        // console.log(`✅ [AuthContext] 토큰 유효 - 남은 시간: ${Math.floor(timeUntilExpiry / 1000)}초`);
+      }
+    } catch (error) {
+      console.error('❌ [AuthContext] 토큰 자동 갱신 실패:', error);
+      // 갱신 실패 시 로그아웃
+      await clearAuth();
+    }
+  };
+
+  // 앱 시작 시 저장된 토큰 확인
   useEffect(() => {
     const loadAuthData = async () => {
       try {
@@ -34,36 +100,43 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
           setAccessToken(token);
           setUser(JSON.parse(userData));
           setIsLoggedIn(true);
+
+          // 초기 로딩 시에도 토큰 갱신 체크
+          await refreshTokenIfNeeded();
         } else {
-          // 토큰이 없으면 로그아웃 상태
           setAccessToken(null);
           setUser(null);
           setIsLoggedIn(false);
         }
       } catch (error) {
         console.error('Failed to load auth data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadAuthData();
+  }, []);
 
-    // 주기적으로 토큰 존재 여부 확인 (apiClient에서 삭제했을 경우 감지)
-    const interval = setInterval(async () => {
-      try {
-        const token = await AsyncStorage.getItem('accessToken');
-        if (!token && isLoggedIn) {
-          // 토큰이 삭제되었으면 로그아웃 처리
-          setAccessToken(null);
-          setUser(null);
-          setIsLoggedIn(false);
-          console.log('토큰 삭제 감지 - 로그아웃 처리');
-        }
-      } catch (error) {
-        console.error('Failed to check auth status:', error);
+  // AppState 변화 감지 (앱 재진입, 화면 켜짐, 백그라운드 복귀)
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      console.log(`📱 [AuthContext] AppState 변경: ${nextAppState}`);
+
+      // 앱이 active 상태로 전환될 때 (백그라운드에서 복귀, 화면 켜짐)
+      if (nextAppState === 'active') {
+        console.log('🔄 [AuthContext] 앱 활성화 감지 - 토큰 갱신 체크');
+        await refreshTokenIfNeeded();
       }
-    }, 1000); // 1초마다 확인
+    });
 
-    return () => clearInterval(interval);
+    return () => {
+      subscription.remove();
+    };
   }, [isLoggedIn]);
 
   // 인증 데이터 저장
@@ -102,7 +175,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
 
   return (
     <AuthContext.Provider
-      value={{isLoggedIn, user, accessToken, setAuthData, clearAuth}}>
+      value={{isLoggedIn, user, accessToken, isLoading, setAuthData, clearAuth, refreshTokenIfNeeded}}>
       {children}
     </AuthContext.Provider>
   );

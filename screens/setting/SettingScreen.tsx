@@ -1,15 +1,23 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, ActivityIndicator} from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
 import {useAuth} from '../../context/AuthContext';
 import {useLogout} from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useFocusEffect} from '@react-navigation/native';
 
 const SettingScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const {colors} = useTheme();
-  const {clearAuth, user} = useAuth();
+  const {clearAuth, user, refreshTokenIfNeeded} = useAuth();
   const logoutMutation = useLogout();
+
+  // 페이지 진입 시 토큰 갱신 체크
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshTokenIfNeeded();
+    }, [refreshTokenIfNeeded]),
+  );
 
   const handleLogout = async () => {
     try {
@@ -76,15 +84,15 @@ const SettingScreen: React.FC<{navigation: any}> = ({navigation}) => {
             {/* 버튼 영역 */}
             <View style={styles.buttonGroup}>
               <TouchableOpacity
-                style={[styles.actionButton, {backgroundColor: colors.primary}]}
+                style={[styles.actionButton, {borderColor: colors.primary}]}
                 onPress={handleProfileSettings}>
-                <Text style={styles.actionButtonText}>프로필 설정</Text>
+                <Text style={[styles.actionButtonText, {color: colors.primary}]}>프로필 설정</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, {backgroundColor: colors.primary}]}
+                style={[styles.actionButton, {borderColor: colors.primary}]}
                 onPress={handleLikedCreations}>
-                <Text style={styles.actionButtonText}>좋아요한 창작물</Text>
+                <Text style={[styles.actionButtonText, {color: colors.primary}]}>좋아요한 창작물</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -180,11 +188,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
   },
   deleteButton: {
     backgroundColor: 'transparent',

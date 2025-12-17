@@ -12,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import {useTheme} from '../../context/ThemeContext';
+import {useAuth} from '../../context/AuthContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
@@ -27,6 +28,7 @@ const CARD_WIDTH = width * 0.85;
 
 const HomeScreen: React.FC = () => {
   const {colors} = useTheme();
+  const {refreshTokenIfNeeded} = useAuth();
   const [currentStep, setCurrentStep] = useState(0); // 0: 비디오, 1: 이미지
 
   // useMediaUpload hook 사용
@@ -75,9 +77,12 @@ const HomeScreen: React.FC = () => {
   const glowOpacity = useRef(new Animated.Value(0)).current;
   const pulseScale = useRef(new Animated.Value(1)).current;
 
-  // 탭에 포커스될 때 비디오 카드로 리셋
+  // 탭에 포커스될 때 비디오 카드로 리셋 + 토큰 갱신 체크
   useFocusEffect(
     useCallback(() => {
+      // 토큰 갱신 체크
+      refreshTokenIfNeeded();
+
       // 모든 상태 초기화
       translateX.setValue(0);
       nextCardTranslateX.setValue(width);
@@ -87,7 +92,7 @@ const HomeScreen: React.FC = () => {
       setShowRegisterForm(false);
       resultCardTranslateY.setValue(height);
       registerCardTranslateY.setValue(height);
-    }, [translateX, nextCardTranslateX, resultCardTranslateY, registerCardTranslateY]),
+    }, [translateX, nextCardTranslateX, resultCardTranslateY, registerCardTranslateY, refreshTokenIfNeeded]),
   );
 
   // 컴포넌트 언마운트 시 임시 파일 삭제
@@ -244,7 +249,7 @@ const HomeScreen: React.FC = () => {
 
   // 등록 폼 표시
   const showRegisterFormCard = () => {
-    if (!resultVideo) return;
+    if (!resultVideo) {return;}
 
     // 파일명 추출
     const extractedFilename = extractFilename(resultVideo);
@@ -273,7 +278,7 @@ const HomeScreen: React.FC = () => {
 
   // 등록 처리
   const handleRegister = async () => {
-    if (!title.trim() || !filename) return;
+    if (!title.trim() || !filename) {return;}
 
     createCreation(
       {

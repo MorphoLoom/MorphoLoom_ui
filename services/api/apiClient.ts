@@ -93,8 +93,11 @@ apiClient.interceptors.response.use(
 
       // 401 에러: 토큰 만료 (public endpoint 제외)
       if (status === 401 && !originalRequest._retry && !isPublicEndpoint) {
+        console.log('🔄 [apiClient] 401 에러 감지 - 토큰 갱신 시작');
+
         if (isRefreshing) {
           // 이미 토큰 갱신 중이면 대기
+          console.log('⏳ [apiClient] 토큰 갱신 대기열에 추가');
           return new Promise(resolve => {
             addRefreshSubscriber((token: string) => {
               originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -109,22 +112,26 @@ apiClient.interceptors.response.use(
         try {
           // AsyncStorage에서 refreshToken 가져오기
           const refreshToken = await AsyncStorage.getItem('refreshToken');
+          console.log('🔑 [apiClient] refreshToken:', refreshToken ? 'EXISTS' : 'NOT FOUND');
 
           if (!refreshToken) {
             // refreshToken이 없으면 로그아웃 처리
+            console.log('❌ [apiClient] refreshToken 없음 - 로그아웃');
             await handleLogout();
             return Promise.reject(error);
           }
 
           // 토큰 갱신 API 호출
+          console.log('📡 [apiClient] 토큰 갱신 API 호출:', `${BASE_URL}/auth/refresh`);
           const response = await axios.post(
-            `${API_BASE_URL}/auth/refresh`,
+            `${BASE_URL}/auth/refresh`,
             {refreshToken},
             {
               headers: {'Content-Type': 'application/json'},
             },
           );
 
+          console.log('✅ [apiClient] 토큰 갱신 성공');
           const {accessToken, refreshToken: newRefreshToken} = response.data;
 
           // 새 토큰 저장
@@ -140,10 +147,11 @@ apiClient.interceptors.response.use(
 
           isRefreshing = false;
 
+          console.log('🔄 [apiClient] 원래 요청 재시도:', originalRequest.url);
           // 원래 요청 재시도
           return apiClient(originalRequest);
         } catch (refreshError) {
-          console.error('토큰 갱신 실패:', refreshError);
+          console.error('❌ [apiClient] 토큰 갱신 실패:', refreshError);
           isRefreshing = false;
           refreshSubscribers = [];
 
@@ -152,11 +160,11 @@ apiClient.interceptors.response.use(
           return Promise.reject(refreshError);
         }
       } else if (status === 403) {
-        console.log('Forbidden - 권한이 없습니다');
+        console.log('⛔ Forbidden - 권한이 없습니다');
       } else if (status === 404) {
-        console.log('Not Found - 리소스를 찾을 수 없습니다');
+        console.log('🔍 Not Found - 리소스를 찾을 수 없습니다');
       } else if (status >= 500) {
-        console.log('Server Error - 서버 오류가 발생했습니다');
+        console.log('💥 Server Error - 서버 오류가 발생했습니다');
       }
     } else if (error.request) {
       // 요청은 보냈지만 응답을 받지 못한 경우
