@@ -24,6 +24,7 @@ export const sendVerification = async (
   return apiFetch('/auth/send-verification', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
@@ -34,6 +35,7 @@ export const verifyEmail = async (
   return apiFetch('/auth/verify-email', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
@@ -44,16 +46,16 @@ export const signup = async (
   return apiFetch('/auth/signup', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
 // 로그인
-export const login = async (
-  request: LoginRequest,
-): Promise<LoginResponse> => {
+export const login = async (request: LoginRequest): Promise<LoginResponse> => {
   return apiFetch('/auth/login', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
@@ -64,14 +66,18 @@ export const socialLogin = async (
   return apiFetch('/auth/social-login', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
 // 로그아웃
-export const logout = async (refreshToken: string): Promise<{message: string}> => {
+export const logout = async (
+  refreshToken: string,
+): Promise<{message: string}> => {
   return apiFetch('/auth/logout', {
     method: 'POST',
-    data: { refreshToken },
+    data: {refreshToken},
+    timeout: 10000,
   });
 };
 
@@ -83,6 +89,7 @@ export const resetPassword = async (
   return apiFetch('/auth/password-reset/verify', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };
 
@@ -93,6 +100,7 @@ export const refreshAccessToken = async (
   return apiFetch('/auth/refresh', {
     method: 'POST',
     data: {refreshToken},
+    timeout: 10000,
   });
 };
 
@@ -103,5 +111,6 @@ export const deleteAccount = async (
   return apiFetch('/auth/delete-account', {
     method: 'POST',
     data: request,
+    timeout: 10000,
   });
 };

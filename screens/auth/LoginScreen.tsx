@@ -29,7 +29,9 @@ const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     // 입력값 검증
     if (!email || !password) {
-      showToast.error('이메일과 비밀번호를 입력해주세요');
+      showToast.error('이메일과 비밀번호를 입력해주세요', undefined, {
+        topOffset: 80,
+      });
       return;
     }
 
@@ -45,7 +47,9 @@ const LoginScreen: React.FC = () => {
 
       // 새 사용자인 경우 추가 안내
       if (response.isNewUser) {
-        showToast.success('환영합니다!', 'MorphoLoom에 오신 것을 환영합니다!');
+        showToast.success('환영합니다!', 'MorphoLoom에 오신 것을 환영합니다!', {
+          topOffset: 80,
+        });
       }
     } catch (error: any) {
       logger.error('로그인 에러:', error);
@@ -53,7 +57,7 @@ const LoginScreen: React.FC = () => {
         error?.response?.data?.message ||
         error?.message ||
         '이메일 또는 비밀번호가 올바르지 않습니다';
-      showToast.error('로그인 실패', errorMessage);
+      showToast.error('로그인 실패', errorMessage, {topOffset: 80});
     }
   };
 
@@ -64,9 +68,7 @@ const LoginScreen: React.FC = () => {
 
   // Forgot Password 화면이 활성화되면 ForgotPasswordScreen 표시
   if (showForgotPassword) {
-    return (
-      <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />
-    );
+    return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
   }
 
   return (
