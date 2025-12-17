@@ -27,7 +27,7 @@ const CARD_WIDTH = width * 0.85;
 
 const HomeScreen: React.FC = () => {
   const {colors} = useTheme();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0); // 0: 비디오, 1: 이미지
 
   // useMediaUpload hook 사용
   const {
@@ -53,6 +53,10 @@ const HomeScreen: React.FC = () => {
   // 창작물 등록 hook
   const {mutate: createCreation, isPending: isRegistering} = useCreateCreation();
 
+  // 결과 카드와 폼 카드 표시 상태 (step과 독립적)
+  const [showResultCard, setShowResultCard] = useState(false);
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
+
   // 등록 폼 상태
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -63,6 +67,10 @@ const HomeScreen: React.FC = () => {
   const currentStepRef = useRef(0);
   const videoPlayer = useRef<any>(null);
 
+  // 결과/폼 카드 애니메이션
+  const resultCardTranslateY = useRef(new Animated.Value(height)).current;
+  const registerCardTranslateY = useRef(new Animated.Value(height)).current;
+
   // 글로우 + 펄스 애니메이션
   const glowOpacity = useRef(new Animated.Value(0)).current;
   const pulseScale = useRef(new Animated.Value(1)).current;
@@ -70,14 +78,16 @@ const HomeScreen: React.FC = () => {
   // 탭에 포커스될 때 비디오 카드로 리셋
   useFocusEffect(
     useCallback(() => {
-      if (currentStepRef.current !== 0) {
-        // 애니메이션 없이 즉시 리셋
-        translateX.setValue(0);
-        nextCardTranslateX.setValue(width);
-        currentStepRef.current = 0;
-        setCurrentStep(0);
-      }
-    }, [translateX, nextCardTranslateX]),
+      // 모든 상태 초기화
+      translateX.setValue(0);
+      nextCardTranslateX.setValue(width);
+      currentStepRef.current = 0;
+      setCurrentStep(0);
+      setShowResultCard(false);
+      setShowRegisterForm(false);
+      resultCardTranslateY.setValue(height);
+      registerCardTranslateY.setValue(height);
+    }, [translateX, nextCardTranslateX, resultCardTranslateY, registerCardTranslateY]),
   );
 
   // 컴포넌트 언마운트 시 임시 파일 삭제
@@ -90,7 +100,7 @@ const HomeScreen: React.FC = () => {
     };
   }, [resultVideo]);
 
-  // 스와이프 제스처 핸들러
+  // 스와이프 제스처 핸들러 (기본 0,1 카드만)
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -107,7 +117,7 @@ const HomeScreen: React.FC = () => {
       onPanResponderMove: (_, gestureState) => {
         const step = currentStepRef.current;
         // 왼쪽 스와이프 (다음 카드로)
-        if (gestureState.dx < 0 && step < 3) {
+        if (gestureState.dx < 0 && step < 1) {
           translateX.setValue(gestureState.dx);
           nextCardTranslateX.setValue(width + gestureState.dx);
         }
@@ -122,18 +132,10 @@ const HomeScreen: React.FC = () => {
         // 왼쪽 스와이프 - 다음 카드로
         if (gestureState.dx < -100 && step === 0) {
           swipeToNext();
-        } else if (gestureState.dx < -100 && step === 1 && resultVideo) {
-          swipeToResult();
-        } else if (gestureState.dx < -100 && step === 2) {
-          swipeToRegister();
         }
         // 오른쪽 스와이프 - 이전 카드로
         else if (gestureState.dx > 100 && step === 1) {
           swipeToPrev();
-        } else if (gestureState.dx > 100 && step === 2) {
-          swipeBackFromResult();
-        } else if (gestureState.dx > 100 && step === 3) {
-          swipeBackFromRegister();
         }
         // 원위치
         else {
@@ -192,119 +194,78 @@ const HomeScreen: React.FC = () => {
     });
   };
 
-
-  const swipeToResult = () => {
-    // Step 1에서 Step 2로 이동
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -width,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(nextCardTranslateX, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      currentStepRef.current = 2;
-      setCurrentStep(2);
-      translateX.setValue(0);
-      nextCardTranslateX.setValue(width);
-    });
-  };
-
   // URL에서 파일명 추출 함수
   const extractFilename = (url: string): string => {
     try {
       const parts = url.split('/');
-      const filename = parts[parts.length - 1];
-      return decodeURIComponent(filename);
+      const extractedFilename = parts[parts.length - 1];
+      return decodeURIComponent(extractedFilename);
     } catch (error) {
       console.error('Failed to extract filename:', error);
       return 'video.mp4';
     }
   };
 
-  const swipeBackFromResult = async () => {
-    // 임시 파일 삭제 ("다시 하기" 클릭 시)
+  // 결과 카드 표시 (합성 완료 시)
+  const showResult = () => {
+    setShowResultCard(true);
+    Animated.timing(resultCardTranslateY, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // 결과 카드 닫기 ("다시 하기" 클릭 시)
+  const closeResult = async () => {
+    // 임시 파일 삭제
     if (resultVideo) {
       await deleteTempVideo(resultVideo);
     }
 
-    // Step 2에서 Step 0으로 완전 초기화
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: width * 2,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(nextCardTranslateX, {
-        toValue: width,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    Animated.timing(resultCardTranslateY, {
+      toValue: height,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowResultCard(false);
       // 모든 상태 초기화
       currentStepRef.current = 0;
       setCurrentStep(0);
       translateX.setValue(0);
       nextCardTranslateX.setValue(width);
-      resetResult(); // useInference hook의 resetResult 사용
-      resetMedia(); // useMediaUpload hook의 resetMedia 사용
-      // 등록 폼 초기화
+      resetResult();
+      resetMedia();
       setTitle('');
       setDescription('');
       setFilename('');
     });
   };
 
-  // Step 2에서 Step 3(등록 폼)으로 이동
-  const swipeToRegister = () => {
+  // 등록 폼 표시
+  const showRegisterFormCard = () => {
     if (!resultVideo) return;
 
     // 파일명 추출
     const extractedFilename = extractFilename(resultVideo);
     setFilename(extractedFilename);
 
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -width,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(nextCardTranslateX, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      currentStepRef.current = 3;
-      setCurrentStep(3);
-      translateX.setValue(0);
-      nextCardTranslateX.setValue(width);
-    });
+    setShowRegisterForm(true);
+    Animated.timing(registerCardTranslateY, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   };
 
-  // Step 3에서 Step 2로 돌아가기
-  const swipeBackFromRegister = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: width,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(nextCardTranslateX, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      currentStepRef.current = 2;
-      setCurrentStep(2);
-      translateX.setValue(0);
-      nextCardTranslateX.setValue(-width);
-      // 등록 폼 입력값 초기화
+  // 등록 폼 닫기
+  const closeRegisterForm = () => {
+    Animated.timing(registerCardTranslateY, {
+      toValue: height,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowRegisterForm(false);
       setTitle('');
       setDescription('');
     });
@@ -328,6 +289,14 @@ const HomeScreen: React.FC = () => {
           if (resultVideo) {
             await deleteTempVideo(resultVideo);
           }
+
+          // 폼 카드 닫기
+          registerCardTranslateY.setValue(height);
+          setShowRegisterForm(false);
+
+          // 결과 카드 닫기
+          resultCardTranslateY.setValue(height);
+          setShowResultCard(false);
 
           // 완전 초기화
           currentStepRef.current = 0;
@@ -356,8 +325,8 @@ const HomeScreen: React.FC = () => {
 
     // useInference hook의 handleStart 호출
     await executeInference(uploadedVideoUrl, uploadedImageUrl, () => {
-      // 성공 시 콜백: 결과 카드로 자동 이동 및 애니메이션
-      swipeToResult();
+      // 성공 시 콜백: 결과 카드 표시 및 애니메이션
+      showResult();
 
       // 글로우 + 펄스 애니메이션 시작
       Animated.sequence([
@@ -483,9 +452,6 @@ const HomeScreen: React.FC = () => {
             <View style={styles.stepIndicator}>
               <View style={[styles.dot, {backgroundColor: colors.primary}]} />
               <View style={[styles.dot, {backgroundColor: colors.border}]} />
-              {resultVideo && (
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-              )}
             </View>
             <Text style={[styles.swipeHint, {color: colors.textSecondary}]}>
               왼쪽으로 스와이프하여 계속
@@ -595,14 +561,12 @@ const HomeScreen: React.FC = () => {
             <View style={styles.stepIndicator}>
               <View style={[styles.dot, {backgroundColor: colors.border}]} />
               <View style={[styles.dot, {backgroundColor: colors.primary}]} />
-              {resultVideo && (
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-              )}
             </View>
           </View>
         </Animated.View>
 
-        {resultVideo && (
+        {/* 결과 카드 (step과 독립적으로 표시) */}
+        {showResultCard && resultVideo && (
           <>
             {/* 글로우 효과 레이어 */}
             <Animated.View
@@ -612,13 +576,7 @@ const HomeScreen: React.FC = () => {
                   shadowColor: colors.primary,
                   opacity: glowOpacity,
                   zIndex: 100,
-                  transform: [
-                    {
-                      translateX:
-                        currentStep === 2 ? translateX : nextCardTranslateX,
-                    },
-                    {scale: pulseScale},
-                  ],
+                  transform: [{translateY: resultCardTranslateY}, {scale: pulseScale}],
                 },
               ]}
             />
@@ -631,58 +589,48 @@ const HomeScreen: React.FC = () => {
                 {
                   backgroundColor: colors.card,
                   zIndex: 101,
-                  transform: [
-                    {
-                      translateX:
-                        currentStep === 2 ? translateX : nextCardTranslateX,
-                    },
-                    {scale: pulseScale},
-                  ],
+                  transform: [{translateY: resultCardTranslateY}, {scale: pulseScale}],
                 },
               ]}>
               <View style={styles.resultVideoArea}>
-              <View style={styles.previewContainer}>
-                <Video
-                  source={{uri: resultVideo}}
-                  paused={false}
-                  repeat={true}
-                  muted={true}
-                  style={styles.videoThumbnail}
-                  resizeMode="contain"
-                />
+                <View style={styles.previewContainer}>
+                  <Video
+                    source={{uri: resultVideo}}
+                    paused={false}
+                    repeat={true}
+                    muted={true}
+                    style={styles.videoThumbnail}
+                    resizeMode="contain"
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.saveButton, {backgroundColor: colors.primary}]}
-                onPress={swipeToRegister}>
-                <Icon name="save" size={20} color="#FFFFFF" />
-                <Text style={styles.saveButtonText}>등록</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.saveButton, {backgroundColor: colors.primary}]}
+                  onPress={showRegisterFormCard}>
+                  <Icon name="save" size={20} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>등록</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.retryButton, {backgroundColor: '#FFFFFF', borderColor: colors.border}]}
-                onPress={swipeBackFromResult}>
-                <Icon name="refresh" size={20} color={colors.text} />
-                <Text style={[styles.retryButtonText, {color: colors.text}]}>다시 하기</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.bottomIndicator}>
-              <View style={styles.stepIndicator}>
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-                <View style={[styles.dot, {backgroundColor: colors.primary}]} />
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
+                <TouchableOpacity
+                  style={[
+                    styles.retryButton,
+                    {backgroundColor: '#FFFFFF', borderColor: colors.border},
+                  ]}
+                  onPress={closeResult}>
+                  <Icon name="refresh" size={20} color={colors.text} />
+                  <Text style={[styles.retryButtonText, {color: colors.text}]}>
+                    다시 하기
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-          </Animated.View>
+            </Animated.View>
           </>
         )}
 
-        {/* 등록 폼 카드 (Step 3) */}
-        {currentStep === 3 && (
+        {/* 등록 폼 카드 (step과 독립적으로 표시) */}
+        {showRegisterForm && (
           <Animated.View
             style={[
               styles.card,
@@ -690,7 +638,7 @@ const HomeScreen: React.FC = () => {
               {
                 backgroundColor: colors.card,
                 zIndex: 102,
-                transform: [{translateX: translateX}],
+                transform: [{translateY: registerCardTranslateY}],
               },
             ]}>
             <View style={styles.registerForm}>
@@ -718,12 +666,12 @@ const HomeScreen: React.FC = () => {
               </View>
 
               {/* 설명 입력 */}
-              <View style={styles.inputGroup}>
+              <View style={styles.inputGroupFlex}>
                 <Text style={[styles.label, {color: colors.text}]}>설명</Text>
                 <TextInput
                   style={[
                     styles.input,
-                    styles.textArea,
+                    styles.textAreaFlex,
                     {
                       backgroundColor: colors.background,
                       color: colors.text,
@@ -736,7 +684,6 @@ const HomeScreen: React.FC = () => {
                   onChangeText={setDescription}
                   editable={!isRegistering}
                   multiline
-                  numberOfLines={4}
                   maxLength={200}
                   textAlignVertical="top"
                 />
@@ -747,9 +694,9 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.retryButton,
-                    {backgroundColor: '#FFFFFF', borderColor: colors.border},
+                    {backgroundColor: colors.background, borderColor: colors.border},
                   ]}
-                  onPress={swipeBackFromRegister}
+                  onPress={closeRegisterForm}
                   disabled={isRegistering}>
                   <Icon name="close" size={20} color={colors.text} />
                   <Text style={[styles.retryButtonText, {color: colors.text}]}>
@@ -777,15 +724,6 @@ const HomeScreen: React.FC = () => {
                     </>
                   )}
                 </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.bottomIndicator}>
-              <View style={styles.stepIndicator}>
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-                <View style={[styles.dot, {backgroundColor: colors.border}]} />
-                <View style={[styles.dot, {backgroundColor: colors.primary}]} />
               </View>
             </View>
           </Animated.View>
@@ -1039,6 +977,10 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: 16,
   },
+  inputGroupFlex: {
+    flex: 1,
+    marginBottom: 16,
+  },
   label: {
     fontSize: 16,
     fontWeight: '600',
@@ -1053,6 +995,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  textAreaFlex: {
+    flex: 1,
     paddingTop: 12,
     paddingBottom: 12,
   },
