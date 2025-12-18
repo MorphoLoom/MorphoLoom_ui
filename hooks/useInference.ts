@@ -7,6 +7,7 @@ import type {
 } from '../types/api';
 import {logger} from '../utils/logger';
 import axios from 'axios';
+import {isApiError} from '../utils/apiError';
 
 export const useInference = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -107,11 +108,11 @@ export const useInference = () => {
       }
       logger.error('Inference failed:', error);
       setIsProcessing(false);
-      showToast.error(
-        '합성 실패',
-        '영상 합성 중 오류가 발생했습니다',
-        {duration: 3000},
-      );
+
+      const message = isApiError(error)
+        ? error.getUserMessage()
+        : '영상 합성 중 오류가 발생했습니다';
+      showToast.error('합성 실패', message, {duration: 3000});
     } finally {
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;

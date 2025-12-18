@@ -2,6 +2,7 @@ import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_BASE_URL, API_TIMEOUT, ENVIRONMENT} from '@env';
 import {logger} from '../../utils/logger';
+import {normalizeError, AppApiError} from '../../utils/apiError';
 
 // API 기본 설정 (환경변수에서 로드)
 const BASE_URL = API_BASE_URL;
@@ -201,14 +202,15 @@ async function apiFetch<T>(
     logger.log('🟢 API 응답:', endpoint, response.status, response.data);
     return response.data;
   } catch (error: any) {
-    logger.error('🔴 API 에러:', endpoint);
-    logger.error('에러 전체:', error);
-    logger.error('에러 response:', error.response);
-    logger.error('에러 response.data:', error.response?.data);
-    logger.error('에러 message:', error.message);
-    throw error;
+    const apiError = normalizeError(error);
+    logger.error('🔴 API 에러:', endpoint, {
+      code: apiError.code,
+      status: apiError.status,
+      message: apiError.message,
+    });
+    throw apiError;
   }
 }
 
 export default apiFetch;
-export {apiClient};
+export {apiClient, AppApiError};

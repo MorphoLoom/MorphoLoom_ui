@@ -5,6 +5,7 @@ import type {
   InferenceRequest,
   InferenceStatusResponse,
 } from '../../types/api';
+import {isApiError} from '../../utils/apiError';
 
 /**
  * AI 추론 실행 및 비디오 파일 다운로드
@@ -59,12 +60,15 @@ export const executeInference = async (
       throw error;
     }
     logger.error('❌ executeInference error:', error);
-    logger.error('Error response:', error.response?.data);
+
+    const errorMessage = isApiError(error)
+      ? error.getUserMessage()
+      : error.response?.data?.error || error.message || '처리 중 오류가 발생했습니다';
 
     return {
       success: false,
       message: '영상 합성 실패',
-      error: error.response?.data?.error || error.message || '처리 중 오류가 발생했습니다',
+      error: errorMessage,
     };
   }
 };
@@ -84,10 +88,15 @@ export const getInferenceStatus =
       return response.data;
     } catch (error: any) {
       logger.error('getInferenceStatus error:', error);
+
+      const errorMessage = isApiError(error)
+        ? error.getUserMessage()
+        : error.message || '서비스 상태 확인 실패';
+
       return {
         success: false,
         message: '서비스 상태 확인 실패',
-        error: error.message,
+        error: errorMessage,
       };
     }
   };

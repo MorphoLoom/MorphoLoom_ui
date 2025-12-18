@@ -1,6 +1,7 @@
 import apiFetch from './apiClient';
 import {logger} from '../../utils/logger';
 import type {VideoUploadResponse, ImageUploadResponse} from '../../types/api';
+import {isApiError} from '../../utils/apiError';
 
 /**
  * 비디오 업로드
@@ -92,9 +93,12 @@ export const saveVideoToGallery = async (
     };
   } catch (error: any) {
     logger.error('saveVideoToGallery error:', error);
+    const message = isApiError(error)
+      ? error.getUserMessage()
+      : error.message || '갤러리 저장에 실패했습니다';
     return {
       success: false,
-      message: error.message || '갤러리 저장에 실패했습니다',
+      message,
     };
   }
 };

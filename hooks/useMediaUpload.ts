@@ -8,6 +8,7 @@ import type {
   ImageUploadResponse,
 } from '../types/api';
 import {logger} from '../utils/logger';
+import {isApiError} from '../utils/apiError';
 
 interface MediaAsset {
   uri: string;
@@ -105,11 +106,10 @@ export const useMediaUpload = () => {
           setIsUploadingImage(false);
         }
 
-        showToast.error(
-          '업로드 실패',
-          `${type === 'video' ? '비디오' : '이미지'} 업로드에 실패했습니다`,
-          {duration: 3000},
-        );
+        const message = isApiError(error)
+          ? error.getUserMessage()
+          : `${type === 'video' ? '비디오' : '이미지'} 업로드에 실패했습니다`;
+        showToast.error('업로드 실패', message, {duration: 3000});
       }
     }
   };
