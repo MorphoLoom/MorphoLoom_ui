@@ -23,6 +23,7 @@ import {useMediaUpload} from '../../hooks/useMediaUpload';
 import {useInference} from '../../hooks/useInference';
 import {useCreateCreation} from '../../hooks/useSocialPosts';
 import {logger} from '../../utils/logger';
+import {BreathingLoader} from '../../components/BreathingLoader';
 
 const {width, height} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -375,12 +376,7 @@ const HomeScreen: React.FC = () => {
 
       {isProcessing && (
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingPopup}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, {color: colors.text}]}>
-              작업중
-            </Text>
-          </View>
+          <BreathingLoader />
         </View>
       )}
 
