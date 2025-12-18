@@ -7,12 +7,16 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreations, useMyCreations} from '../../hooks/useSocialPosts';
 import {logger} from '../../utils/logger';
 import type {Creation} from '../../types/api';
+
+const {width} = Dimensions.get('window');
+const ITEM_WIDTH = width / 3;
 
 interface SocialScreenProps {
   navigation?: any;
@@ -237,8 +241,8 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   gridImageWrapper: {
-    flex: 1,
-    aspectRatio: 1,
+    width: ITEM_WIDTH,
+    height: ITEM_WIDTH,
     margin: 0,
     padding: 0,
     borderWidth: 0,
