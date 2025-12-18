@@ -3,6 +3,7 @@ import {SafeAreaView, StatusBar, View, ActivityIndicator} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-context';
 import Header from './app/Header';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SplashScreen from 'react-native-splash-screen';
@@ -211,16 +212,26 @@ function AppContent(): React.JSX.Element {
   );
 }
 
+function ToastWithInsets(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+  // 상단 safe area + 여유 10px (모든 페이지에서 일관성 유지)
+  const topOffset = insets.top + 10;
+
+  return <Toast position="top" topOffset={topOffset} />;
+}
+
 function App(): React.JSX.Element {
   return (
-    <QueryProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppContent />
-          <Toast />
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryProvider>
+    <SafeAreaProvider>
+      <QueryProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppContent />
+            <ToastWithInsets />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryProvider>
+    </SafeAreaProvider>
   );
 }
 
