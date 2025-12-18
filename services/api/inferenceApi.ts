@@ -1,5 +1,6 @@
 import {apiClient} from './apiClient';
 import {logger} from '../../utils/logger';
+import axios from 'axios';
 import type {
   InferenceRequest,
   InferenceStatusResponse,
@@ -19,6 +20,7 @@ import type {
  */
 export const executeInference = async (
   request: InferenceRequest,
+  signal?: AbortSignal,
 ): Promise<InferenceStatusResponse> => {
   const requestBody: InferenceRequest = {
     ...request,
@@ -31,6 +33,7 @@ export const executeInference = async (
     // POST 요청으로 추론 실행 (JSON 응답 받기)
     const response = await apiClient.post('/inference/execute', requestBody, {
       timeout: 600000, // 10분 (추론 완료까지 대기)
+      signal,
     });
 
     logger.log('✅ Inference response:', response.data);
@@ -52,6 +55,9 @@ export const executeInference = async (
       thumbnailUrl,
     };
   } catch (error: any) {
+    if (axios.isCancel(error)) {
+      throw error;
+    }
     logger.error('❌ executeInference error:', error);
     logger.error('Error response:', error.response?.data);
 

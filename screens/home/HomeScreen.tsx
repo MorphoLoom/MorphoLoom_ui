@@ -52,6 +52,7 @@ const HomeScreen: React.FC = () => {
     resultVideo,
     handleStart: executeInference,
     resetResult,
+    cancelInference,
   } = useInference();
 
   // 창작물 등록 hook
@@ -60,6 +61,7 @@ const HomeScreen: React.FC = () => {
   // 결과 카드와 폼 카드 표시 상태 (step과 독립적)
   const [showResultCard, setShowResultCard] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
+  const [showCancelButton, setShowCancelButton] = useState(false);
 
   // 등록 폼 상태
   const [title, setTitle] = useState('');
@@ -96,6 +98,25 @@ const HomeScreen: React.FC = () => {
       registerCardTranslateY.setValue(height);
     }, [translateX, nextCardTranslateX, resultCardTranslateY, registerCardTranslateY, refreshTokenIfNeeded]),
   );
+
+  // 작업 취소 버튼 타이머
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isProcessing) {
+      setShowCancelButton(false);
+      // 3초 후 취소 버튼 표시
+      timer = setTimeout(() => {
+        setShowCancelButton(true);
+      }, 3000);
+    } else {
+      setShowCancelButton(false);
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isProcessing]);
 
   // 컴포넌트 언마운트 시 임시 파일 삭제
   useEffect(() => {
@@ -376,7 +397,10 @@ const HomeScreen: React.FC = () => {
 
       {isProcessing && (
         <View style={styles.loadingOverlay}>
-          <BreathingLoader />
+          <BreathingLoader
+            showCancelButton={showCancelButton}
+            onCancel={cancelInference}
+          />
         </View>
       )}
 

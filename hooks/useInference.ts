@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 import {showToast} from '../utils/toast';
 import {executeInference, getInferenceStatus} from '../services/api/inferenceApi';
 import type {
@@ -6,10 +6,21 @@ import type {
   ImageUploadResponse,
 } from '../types/api';
 import {logger} from '../utils/logger';
+import axios from 'axios';
 
 export const useInference = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [resultVideo, setResultVideo] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cancelInference = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsProcessing(false);
+      showToast.info('취소됨', '작업이 취소되었습니다');
+    }
+  };
 
   const handleStart = async (
     uploadedVideoUrl: VideoUploadResponse | null,
@@ -26,6 +37,8 @@ export const useInference = () => {
     }
 
     setIsProcessing(true);
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
       // 1. 추론 서비스 상태 확인
@@ -61,7 +74,7 @@ export const useInference = () => {
       const inferenceResult = await executeInference({
         sourcePath: sourceFileName,
         drivingPath: drivingFileName,
-      });
+      }, abortController.signal);
 
       logger.log('Inference result:', inferenceResult);
 
@@ -88,6 +101,10 @@ export const useInference = () => {
         );
       }
     } catch (error) {
+      if (axios.isCancel(error)) {
+        logger.log('Inference cancelled by user');
+        return;
+      }
       logger.error('Inference failed:', error);
       setIsProcessing(false);
       showToast.error(
@@ -95,6 +112,10 @@ export const useInference = () => {
         '영상 합성 중 오류가 발생했습니다',
         {duration: 3000},
       );
+    } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -107,5 +128,6 @@ export const useInference = () => {
     resultVideo,
     handleStart,
     resetResult,
+    cancelInference,
   };
 };
