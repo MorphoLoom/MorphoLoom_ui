@@ -188,11 +188,6 @@ function AppContent(): React.JSX.Element {
   const {isLoggedIn, isLoading} = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
-  useEffect(() => {
-    // Native splash 숨기고 JS Splash 표시
-    SplashScreen.hide();
-  }, []);
-
   // JS Splash 표시 중
   if (showSplash) {
     return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
