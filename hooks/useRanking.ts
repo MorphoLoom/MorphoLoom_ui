@@ -6,7 +6,7 @@ export const useCreationRankings = () => {
   return useQuery({
     queryKey: ['creations', 'ranking'],
     queryFn: () => fetchCreationRankings(),
-    staleTime: 3 * 60 * 1000, // 3분 (랭킹은 좀 더 자주 갱신)
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0, // 항상 최신 데이터 조회 (좋아요 반영 즉시 확인)
+    gcTime: 5 * 60 * 1000, // 5분간 캐시 보관
   });
 };
