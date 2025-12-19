@@ -16,7 +16,6 @@ import {useAuth} from '../../context/AuthContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useFocusEffect} from '@react-navigation/native';
 import Video from 'react-native-video';
-import Toast from 'react-native-toast-message';
 import {showToast} from '../../utils/toast';
 import {deleteTempVideo} from '../../services/api/contentApi';
 import {useMediaUpload} from '../../hooks/useMediaUpload';
@@ -56,7 +55,8 @@ const HomeScreen: React.FC = () => {
   } = useInference();
 
   // 창작물 등록 hook
-  const {mutate: createCreation, isPending: isRegistering} = useCreateCreation();
+  const {mutate: createCreation, isPending: isRegistering} =
+    useCreateCreation();
 
   // 결과 카드와 폼 카드 표시 상태 (step과 독립적)
   const [showResultCard, setShowResultCard] = useState(false);
@@ -96,7 +96,13 @@ const HomeScreen: React.FC = () => {
       setShowRegisterForm(false);
       resultCardTranslateY.setValue(height);
       registerCardTranslateY.setValue(height);
-    }, [translateX, nextCardTranslateX, resultCardTranslateY, registerCardTranslateY, refreshTokenIfNeeded]),
+    }, [
+      translateX,
+      nextCardTranslateX,
+      resultCardTranslateY,
+      registerCardTranslateY,
+      refreshTokenIfNeeded,
+    ]),
   );
 
   // 작업 취소 버튼 타이머
@@ -272,7 +278,9 @@ const HomeScreen: React.FC = () => {
 
   // 등록 폼 표시
   const showRegisterFormCard = () => {
-    if (!resultVideo) {return;}
+    if (!resultVideo) {
+      return;
+    }
 
     // 파일명 추출
     const extractedFilename = extractFilename(resultVideo);
@@ -301,7 +309,9 @@ const HomeScreen: React.FC = () => {
 
   // 등록 처리
   const handleRegister = async () => {
-    if (!title.trim() || !filename) {return;}
+    if (!title.trim() || !filename) {
+      return;
+    }
 
     createCreation(
       {
@@ -337,7 +347,7 @@ const HomeScreen: React.FC = () => {
           setDescription('');
           setFilename('');
         },
-        onError: (error) => {
+        onError: error => {
           logger.error('Registration error:', error);
           showToast.error('등록 실패', '창작물 등록에 실패했습니다');
         },
@@ -393,8 +403,6 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
-      <Toast />
-
       {isProcessing && (
         <View style={styles.loadingOverlay}>
           <BreathingLoader
@@ -604,7 +612,10 @@ const HomeScreen: React.FC = () => {
                   shadowColor: colors.primary,
                   opacity: glowOpacity,
                   zIndex: 100,
-                  transform: [{translateY: resultCardTranslateY}, {scale: pulseScale}],
+                  transform: [
+                    {translateY: resultCardTranslateY},
+                    {scale: pulseScale},
+                  ],
                 },
               ]}
             />
@@ -618,7 +629,10 @@ const HomeScreen: React.FC = () => {
                   backgroundColor: colors.card,
                   shadowColor: colors.primary,
                   zIndex: 101,
-                  transform: [{translateY: resultCardTranslateY}, {scale: pulseScale}],
+                  transform: [
+                    {translateY: resultCardTranslateY},
+                    {scale: pulseScale},
+                  ],
                 },
               ]}>
               <View style={styles.resultVideoArea}>
@@ -724,7 +738,10 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.retryButton,
-                    {backgroundColor: colors.background, borderColor: colors.border},
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
                   ]}
                   onPress={closeRegisterForm}
                   disabled={isRegistering}>

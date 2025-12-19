@@ -6,6 +6,9 @@ export interface ToastOptions {
   onPress?: () => void;
 }
 
+// Toast 기본 상단 여백 (Header 아래 적절한 위치)
+const DEFAULT_TOP_OFFSET = 100;
+
 export const showToast = {
   success: (text1: string, text2?: string, options?: ToastOptions) => {
     Toast.show({
@@ -13,7 +16,7 @@ export const showToast = {
       text1,
       text2,
       visibilityTime: options?.duration || 3000,
-      topOffset: options?.topOffset || 30,
+      topOffset: options?.topOffset ?? DEFAULT_TOP_OFFSET,
       onPress: options?.onPress,
       text1Style: {
         fontSize: 14,
@@ -37,7 +40,7 @@ export const showToast = {
       text1,
       text2,
       visibilityTime: options?.duration || 3000,
-      topOffset: options?.topOffset || 30,
+      topOffset: options?.topOffset ?? DEFAULT_TOP_OFFSET,
       onPress: options?.onPress,
       text1Style: {
         fontSize: 14,
@@ -61,7 +64,7 @@ export const showToast = {
       text1,
       text2,
       visibilityTime: options?.duration || 3000,
-      topOffset: options?.topOffset || 30,
+      topOffset: options?.topOffset ?? DEFAULT_TOP_OFFSET,
       onPress: options?.onPress,
       text1Style: {
         fontSize: 14,
@@ -85,7 +88,7 @@ export const showToast = {
       text1,
       text2,
       visibilityTime: options?.duration || 3000,
-      topOffset: options?.topOffset || 30,
+      topOffset: options?.topOffset ?? DEFAULT_TOP_OFFSET,
       onPress: options?.onPress,
       text1Style: {
         fontSize: 14,
