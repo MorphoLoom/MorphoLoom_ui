@@ -15,6 +15,7 @@ import {showToast} from '../../utils/toast';
 import {logger} from '../../utils/logger';
 import SignUpScreen from './SignUpScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
+import {FormContainer} from '../../components/FormContainer';
 
 const LoginScreen: React.FC = () => {
   const {colors} = useTheme();
@@ -72,9 +73,10 @@ const LoginScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
-      {/* 로고/타이틀 */}
-      <Text style={[styles.title, {color: colors.text}]}>MorphoLoom</Text>
+    <FormContainer style={{backgroundColor: colors.background}}>
+      <View style={styles.container}>
+        {/* 로고/타이틀 */}
+        <Text style={[styles.title, {color: colors.text}]}>MorphoLoom</Text>
 
       {/* 이메일 입력 */}
       <TextInput
@@ -189,7 +191,8 @@ const LoginScreen: React.FC = () => {
           <Icon name="google" size={24} color="#DB4437" />
         </TouchableOpacity>
       </View>
-    </View>
+      </View>
+    </FormContainer>
   );
 };
 

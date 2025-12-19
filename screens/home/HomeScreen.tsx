@@ -659,7 +659,7 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.retryButton,
-                    {backgroundColor: '#FFFFFF', borderColor: colors.border},
+                    {backgroundColor: colors.surface, borderColor: colors.border},
                   ]}
                   onPress={closeResult}>
                   <Icon name="refresh" size={20} color={colors.text} />

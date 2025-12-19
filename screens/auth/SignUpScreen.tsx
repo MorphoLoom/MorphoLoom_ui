@@ -17,6 +17,7 @@ import {
 } from '../../hooks/useAuth';
 import {showToast} from '../../utils/toast';
 import {logger} from '../../utils/logger';
+import {FormContainer} from '../../components/FormContainer';
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -161,10 +162,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, {backgroundColor: colors.background}]}
-      contentContainerStyle={styles.contentContainer}>
-      {/* 상단 뒤로가기 아이콘 버튼 */}
+    <FormContainer style={{backgroundColor: colors.background}}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}>
+        {/* 상단 뒤로가기 아이콘 버튼 */}
       <TouchableOpacity
         style={[styles.iconBackButton, {backgroundColor: colors.primary}]}
         onPress={onBack}
@@ -329,7 +331,8 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({onBack}) => {
           <Text style={[styles.loginLink, {color: colors.primary}]}>로그인</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </FormContainer>
   );
 };
 
