@@ -28,10 +28,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashIcon" translatesAutoresizingMaskIntoConstraints="NO" id="vvr-1H-FRW">
-                                <rect key="frame" x="37.5" y="183.5" width="300" height="300"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" secondItem="vvr-1H-FRW" secondAttribute="height" multiplier="2:1" id="aspect-ratio"/>
-                                </constraints>
+                                <rect key="frame" x="37.5" y="250" width="300" height="167"/>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
@@ -39,6 +36,7 @@
                         <constraints>
                             <constraint firstItem="vvr-1H-FRW" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="IrH-6L-Cnx"/>
                             <constraint firstItem="vvr-1H-FRW" firstAttribute="width" secondItem="Ze5-6b-2t3" secondAttribute="width" multiplier="0.5" id="width-constraint"/>
+                            <constraint firstItem="vvr-1H-FRW" firstAttribute="height" secondItem="Ze5-6b-2t3" secondAttribute="height" multiplier="0.25" id="height-constraint"/>
                             <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="MN2-I3-ftu" secondAttribute="bottom" constant="20" id="OZV-Vh-mqD"/>
                             <constraint firstItem="Bcu-3y-fUS" firstAttribute="centerX" secondItem="GJd-Yh-RWb" secondAttribute="centerX" id="Q3B-4B-g5h"/>
                             <constraint firstItem="MN2-I3-ftu" firstAttribute="centerX" secondItem="Bcu-3y-fUS" secondAttribute="centerX" id="akx-eg-2ui"/>
