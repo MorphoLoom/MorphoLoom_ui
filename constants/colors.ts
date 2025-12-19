@@ -1,13 +1,13 @@
 // 전역 색상 팔레트 - 여기서 한 번에 관리
 export const COLORS = {
-  // Primary 색상 (보라색 계열)
-  primary: '#6E4877',
-  primaryLight: '#9B7BA3',
-  primaryDark: '#503554',
+  // Primary 색상 (로고의 밝은 보라색 - 왼쪽 영역)
+  primary: '#7C4DFF',
+  primaryLight: '#B085FF',
+  primaryDark: '#5E35B1',
 
-  // Secondary 색상 (연한 보라색)
-  secondary: '#B8A5C0',
-  secondaryLight: '#D4CAD9',
+  // Secondary 색상 (로고의 파랑색 - 오른쪽 영역)
+  secondary: '#4A9DD8',
+  secondaryLight: '#7BB5E3',
 
   // Accent 색상
   accent: '#E8DEF8',

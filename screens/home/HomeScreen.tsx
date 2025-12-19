@@ -411,6 +411,7 @@ const HomeScreen: React.FC = () => {
             styles.absoluteCard,
             {
               backgroundColor: colors.card,
+              shadowColor: colors.primary,
               transform: [
                 {
                   translateX:
@@ -492,6 +493,7 @@ const HomeScreen: React.FC = () => {
             styles.absoluteCard,
             {
               backgroundColor: colors.card,
+              shadowColor: colors.primary,
               transform: [
                 {
                   translateX:
@@ -614,6 +616,7 @@ const HomeScreen: React.FC = () => {
                 styles.absoluteCard,
                 {
                   backgroundColor: colors.card,
+                  shadowColor: colors.primary,
                   zIndex: 101,
                   transform: [{translateY: resultCardTranslateY}, {scale: pulseScale}],
                 },
@@ -663,6 +666,7 @@ const HomeScreen: React.FC = () => {
               styles.absoluteCard,
               {
                 backgroundColor: colors.card,
+                shadowColor: colors.primary,
                 zIndex: 102,
                 transform: [{translateY: registerCardTranslateY}],
               },
@@ -773,7 +777,6 @@ const styles = StyleSheet.create({
     height: height * 0.6,
     borderRadius: 24,
     padding: 16,
-    shadowColor: '#6E4877',
     shadowOffset: {
       width: 0,
       height: 8,

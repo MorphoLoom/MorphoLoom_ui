@@ -24,6 +24,7 @@ interface SocialScreenProps {
 
 // 전체 그리드 컴포넌트
 const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
+  const {colors} = useTheme();
   const {
     data,
     isLoading,
@@ -63,7 +64,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7C4DFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -82,7 +83,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       onEndReachedThreshold={0.5}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <ActivityIndicator size="small" color="#7C4DFF" style={{padding: 20}} />
+          <ActivityIndicator size="small" color={colors.primary} style={{padding: 20}} />
         ) : null
       }
     />
@@ -91,6 +92,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
 
 // 내 창작물 그리드 컴포넌트
 const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
+  const {colors} = useTheme();
   const {
     data,
     isLoading,
@@ -130,7 +132,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7C4DFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -149,7 +151,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
       onEndReachedThreshold={0.5}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <ActivityIndicator size="small" color="#7C4DFF" style={{padding: 20}} />
+          <ActivityIndicator size="small" color={colors.primary} style={{padding: 20}} />
         ) : null
       }
     />
@@ -163,25 +165,40 @@ const SocialScreen: React.FC<SocialScreenProps> = ({navigation}) => {
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       {/* 탭 헤더 */}
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer, {
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+      }]}>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'all' && styles.activeTab]}
+          style={[
+            styles.tabButton,
+            activeTab === 'all' && styles.activeTab,
+            activeTab === 'all' && {borderBottomColor: colors.primary},
+          ]}
           onPress={() => setActiveTab('all')}>
           <Text
             style={[
               styles.tabText,
+              {color: colors.textSecondary},
               activeTab === 'all' && styles.activeTabText,
+              activeTab === 'all' && {color: colors.primary},
             ]}>
             전체
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'my' && styles.activeTab]}
+          style={[
+            styles.tabButton,
+            activeTab === 'my' && styles.activeTab,
+            activeTab === 'my' && {borderBottomColor: colors.primary},
+          ]}
           onPress={() => setActiveTab('my')}>
           <Text
             style={[
               styles.tabText,
+              {color: colors.textSecondary},
               activeTab === 'my' && styles.activeTabText,
+              activeTab === 'my' && {color: colors.primary},
             ]}>
             내 창작물
           </Text>
@@ -205,8 +222,6 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
   },
   tabButton: {
     flex: 1,
@@ -216,15 +231,12 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#7C4DFF',
   },
   tabText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#999999',
   },
   activeTabText: {
-    color: '#7C4DFF',
     fontWeight: '700',
   },
   loadingContainer: {
