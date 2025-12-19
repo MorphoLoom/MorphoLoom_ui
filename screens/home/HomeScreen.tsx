@@ -1,4 +1,4 @@
-import React, {useState, useRef, useCallback, useEffect} from 'react';
+import React, {useState, useRef, useCallback, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -135,58 +135,62 @@ const HomeScreen: React.FC = () => {
   }, [resultVideo]);
 
   // 스와이프 제스처 핸들러 (기본 0,1 카드만)
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return (
-          Math.abs(gestureState.dx) > 10 &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
-        );
-      },
-      onPanResponderMove: (_, gestureState) => {
-        const step = currentStepRef.current;
-        // 왼쪽 스와이프 (다음 카드로)
-        if (gestureState.dx < 0 && step < 1) {
-          translateX.setValue(gestureState.dx);
-          nextCardTranslateX.setValue(width + gestureState.dx);
-        }
-        // 오른쪽 스와이프 (이전 카드로)
-        else if (gestureState.dx > 0 && step > 0) {
-          translateX.setValue(gestureState.dx);
-          nextCardTranslateX.setValue(-width + gestureState.dx);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const step = currentStepRef.current;
-        // 왼쪽 스와이프 - 다음 카드로
-        if (gestureState.dx < -100 && step === 0) {
-          swipeToNext();
-        }
-        // 오른쪽 스와이프 - 이전 카드로
-        else if (gestureState.dx > 100 && step === 1) {
-          swipeToPrev();
-        }
-        // 원위치
-        else {
-          Animated.parallel([
-            Animated.spring(translateX, {
-              toValue: 0,
-              useNativeDriver: true,
-            }),
-            Animated.spring(nextCardTranslateX, {
-              toValue: step === 0 ? width : -width,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-      },
-    }),
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !showResultCard && !showRegisterForm,
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (showResultCard || showRegisterForm) return false;
+          return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        },
+        onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+          if (showResultCard || showRegisterForm) return false;
+          return (
+            Math.abs(gestureState.dx) > 10 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+          );
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const step = currentStepRef.current;
+          // 왼쪽 스와이프 (다음 카드로)
+          if (gestureState.dx < 0 && step < 1) {
+            translateX.setValue(gestureState.dx);
+            nextCardTranslateX.setValue(width + gestureState.dx);
+          }
+          // 오른쪽 스와이프 (이전 카드로)
+          else if (gestureState.dx > 0 && step > 0) {
+            translateX.setValue(gestureState.dx);
+            nextCardTranslateX.setValue(-width + gestureState.dx);
+          }
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const step = currentStepRef.current;
+          // 왼쪽 스와이프 - 다음 카드로
+          if (gestureState.dx < -100 && step === 0) {
+            swipeToNext();
+          }
+          // 오른쪽 스와이프 - 이전 카드로
+          else if (gestureState.dx > 100 && step === 1) {
+            swipeToPrev();
+          }
+          // 원위치
+          else {
+            Animated.parallel([
+              Animated.spring(translateX, {
+                toValue: 0,
+                useNativeDriver: true,
+              }),
+              Animated.spring(nextCardTranslateX, {
+                toValue: step === 0 ? width : -width,
+                useNativeDriver: true,
+              }),
+            ]).start();
+          }
+        },
+      }),
+    [showResultCard, showRegisterForm],
+  );
 
   const swipeToNext = () => {
     Animated.parallel([
@@ -414,6 +418,7 @@ const HomeScreen: React.FC = () => {
 
       <View style={styles.cardContainer} {...panResponder.panHandlers}>
         <Animated.View
+          pointerEvents={showResultCard || showRegisterForm ? 'none' : 'auto'}
           style={[
             styles.card,
             styles.absoluteCard,
@@ -496,6 +501,7 @@ const HomeScreen: React.FC = () => {
 
         {/* 이미지 카드 */}
         <Animated.View
+          pointerEvents={showResultCard || showRegisterForm ? 'none' : 'auto'}
           style={[
             styles.card,
             styles.absoluteCard,
