@@ -14,6 +14,7 @@ import {useTheme} from '../../context/ThemeContext';
 import {useCreations, useMyCreations} from '../../hooks/useSocialPosts';
 import {logger} from '../../utils/logger';
 import type {Creation} from '../../types/api';
+import {GridSkeleton} from '../../components/skeleton/GridSkeleton';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 3;
@@ -62,11 +63,7 @@ const AllGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <GridSkeleton />;
   }
 
   return (
@@ -130,11 +127,7 @@ const LikeGridTab: React.FC<{navigation?: any}> = ({navigation}) => {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <GridSkeleton />;
   }
 
   return (

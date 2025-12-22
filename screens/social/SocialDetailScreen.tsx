@@ -14,6 +14,7 @@ import {useTheme} from '../../context/ThemeContext';
 import {useCreationDetail} from '../../hooks/useCreationDetail';
 import {useCreationLike} from '../../hooks/useCreationLike';
 import {useCreationDelete} from '../../hooks/useCreationDelete';
+import {DetailSkeleton} from '../../components/skeleton/DetailSkeleton';
 
 const SocialDetailScreen: React.FC<any> = ({
   route,
@@ -137,11 +138,7 @@ const SocialDetailScreen: React.FC<any> = ({
   };
 
   if (isLoading) {
-    return (
-      <View style={[styles.container, styles.centerContainer, {backgroundColor: colors.background}]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <DetailSkeleton />;
   }
 
   if (error || !creation) {

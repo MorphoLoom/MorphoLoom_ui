@@ -6,7 +6,6 @@ import {
   FlatList,
   Image,
   Animated,
-  ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +13,7 @@ import {COLORS} from '../../constants/colors';
 import {useTheme} from '../../context/ThemeContext';
 import {useCreationRankings} from '../../hooks/useRanking';
 import {logger} from '../../utils/logger';
+import {RankingSkeleton} from '../../components/skeleton/RankingSkeleton';
 
 interface RankingScreenProps {
   navigation?: any;
@@ -237,14 +237,7 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
   );
 
   if (isLoading) {
-    return (
-      <View style={[styles.container, styles.centerContainer, {backgroundColor: colors.background}]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={[styles.loadingText, {color: colors.textSecondary}]}>
-          랭킹 불러오는 중...
-        </Text>
-      </View>
-    );
+    return <RankingSkeleton />;
   }
 
   if (error) {

@@ -14,6 +14,7 @@ import {useTheme} from '../../context/ThemeContext';
 import {useLikedCreations} from '../../hooks/useLikedCreations';
 import {logger} from '../../utils/logger';
 import type {Creation} from '../../types/api';
+import {GridSkeleton} from '../../components/skeleton/GridSkeleton';
 
 const {width} = Dimensions.get('window');
 const ITEM_WIDTH = width / 3;
@@ -64,13 +65,25 @@ const LikedCreationsScreen: React.FC<LikedCreationsScreenProps> = ({
 
   if (isLoading) {
     return (
-      <View
-        style={[
-          styles.container,
-          styles.loadingContainer,
-          {backgroundColor: colors.background},
-        ]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={[styles.container, {backgroundColor: colors.background}]}>
+        {/* 상단 헤더 */}
+        <View style={[styles.header, {backgroundColor: colors.background}]}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}>
+            <Ionicons
+              name="arrow-back-outline"
+              size={28}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, {color: colors.text}]}>
+            좋아요한 창작물
+          </Text>
+          <View style={styles.headerRightSpace} />
+        </View>
+        <GridSkeleton />
       </View>
     );
   }
