@@ -2,28 +2,37 @@ import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
   Keyboard,
   StyleSheet,
   ViewStyle,
+  ScrollView,
 } from 'react-native';
 
 interface FormContainerProps {
   children: React.ReactNode;
   style?: ViewStyle;
+  contentContainerStyle?: ViewStyle;
+  scrollEnabled?: boolean;
 }
 
 export const FormContainer: React.FC<FormContainerProps> = ({
   children,
   style,
+  contentContainerStyle,
+  scrollEnabled = true,
 }) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, style]}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={scrollEnabled}
+        showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={Keyboard.dismiss}>
         {children}
-      </TouchableWithoutFeedback>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -31,5 +40,8 @@ export const FormContainer: React.FC<FormContainerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
 });
