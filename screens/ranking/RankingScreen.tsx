@@ -215,22 +215,6 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
           <Text style={[styles.title, {color: colors.text}]} numberOfLines={1}>
             {item.title}
           </Text>
-          <Text
-            style={[styles.description, {color: colors.textSecondary}]}
-            numberOfLines={1}>
-            {item.description}
-          </Text>
-        </View>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Ionicons name="heart" size={14} color={COLORS.primary} />
-            <Text style={[styles.statText, {color: colors.textSecondary}]}>
-              {item.likes}
-            </Text>
-          </View>
-          <Text style={[styles.scoreText, {color: colors.text}]}>
-            {item.rankScore.toFixed(0)}
-          </Text>
         </View>
       </Animated.View>
     </TouchableOpacity>
@@ -440,13 +424,15 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: COLORS.primary,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
   },
   rankNumber: {
-    color: '#fff',
+    color: COLORS.primary,
     fontWeight: 'bold',
     fontSize: 13,
   },
