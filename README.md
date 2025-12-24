@@ -14,12 +14,12 @@ AI 얼굴 합성을 수행하는 모바일 애플리케이션입니다.
 ### 유저 관리
 
 <p>
-  <img src="docs/images/user/auth_login.png" width="150" height="320" />
-  <img src="docs/images/user/auth_signup.png" width="150" height="320" />
-  <img src="docs/images/user/auth_signup_verify.png" width="150" height="320" />
-  <img src="docs/images/user/auth_password_reset.png" width="150" height="320" />
-  <img src="docs/images/user/user_setting.png" width="150" height="320" />
-  <img src="docs/images/user/user_delete.png" width="150" height="320" />
+  <img src="docs/images/user/auth_login.PNG" width="15%" />
+  <img src="docs/images/user/auth_signup.PNG" width="15%" />
+  <img src="docs/images/user/auth_signup_verify.PNG" width="15%" />
+  <img src="docs/images/user/auth_password_reset.PNG" width="15%" />
+  <img src="docs/images/user/user_setting.PNG" width="15%" />
+  <img src="docs/images/user/user_delete.png" width="15%" />
 </p>
 
   - 로그인 및 회원가입
@@ -30,9 +30,9 @@ AI 얼굴 합성을 수행하는 모바일 애플리케이션입니다.
 ### 미디어 업로드
 
 <p>
-  <img src="docs/images/main/main_image_upload.png" width="180" height="380" />
-  <img src="docs/images/main/main_video_upload.png" width="180" height="380" />
-  <img src="docs/images/main/main_form_upload.png" width="180" height="380" />
+  <img src="docs/images/main/main_image_upload.PNG" width="24%" />
+  <img src="docs/images/main/main_video_upload.PNG" width="24%" />
+  <img src="docs/images/main/main_form_upload.png" width="24%" />
 </p>
 
   - 비디오 업로드
@@ -40,10 +40,10 @@ AI 얼굴 합성을 수행하는 모바일 애플리케이션입니다.
   - 창작물 등록
 
 ### 소셜 피드
-<p align="">
-  <img src="docs/images/social/social_list_my.png" width="180" height="380" />
-  <img src="docs/images/social/social_list.png" width="180" height="380" />
-  <img src="docs/images/social/social_detail.png" width="180" height="380" />
+<p>
+  <img src="docs/images/social/social_list_my.PNG" width="24%" />
+  <img src="docs/images/social/social_list.PNG" width="24%" />
+  <img src="docs/images/social/social_detail.png" width="24%" />
 </p>
 
   - 다른 사용자 창작물 탐색
@@ -51,8 +51,8 @@ AI 얼굴 합성을 수행하는 모바일 애플리케이션입니다.
   - 소셜 상세 보기 ( 좋아요 및 상세 정보 )
 
 ### 랭킹 시스템
-<p align="">
-  <img src="docs/images/ranking/ranking_list.png" width="180" height="380" />
+<p>
+  <img src="docs/images/ranking/ranking_list.PNG" width="24%" />
 </p>
 
   - 좋아요 기반으로 업로드한 창작물을 순위로 제공
