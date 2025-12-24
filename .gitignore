@@ -81,5 +81,6 @@ env/.env.development
 env/.env.production
 env/.env.staging
 
-# Documents
+# Documents (images는 허용)
 /docs/*
+!/docs/images/
