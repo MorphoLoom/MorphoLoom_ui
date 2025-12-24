@@ -80,3 +80,6 @@ yarn-error.log
 env/.env.development
 env/.env.production
 env/.env.staging
+
+# Documents
+/docs/*

@@ -179,6 +179,12 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
             numberOfLines={1}>
             {item.title}
           </Text>
+          <View style={styles.topCircleLikes}>
+            <Ionicons name="heart" size={12} color={COLORS.error} />
+            <Text style={[styles.likesText, {color: colors.textSecondary}]}>
+              {item.likes}
+            </Text>
+          </View>
         </Animated.View>
       </TouchableOpacity>
     );
@@ -214,6 +220,12 @@ const RankingScreen: React.FC<RankingScreenProps> = ({navigation}) => {
         <View style={styles.textContainer}>
           <Text style={[styles.title, {color: colors.text}]} numberOfLines={1}>
             {item.title}
+          </Text>
+        </View>
+        <View style={styles.listLikes}>
+          <Ionicons name="heart" size={14} color={COLORS.error} />
+          <Text style={[styles.likesText, {color: colors.textSecondary}]}>
+            {item.likes}
           </Text>
         </View>
       </Animated.View>
@@ -310,10 +322,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: 16,
+    marginTop: 24,
     marginHorizontal: 12,
-    height: 140,
+    height: 160,
   },
   topCircle: {
     alignItems: 'center',
@@ -378,6 +390,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
     textAlign: 'center',
+  },
+  topCircleLikes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 2,
+  },
+  listLikes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  likesText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   listItem: {
     flexDirection: 'row',
